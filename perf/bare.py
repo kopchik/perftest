@@ -9,9 +9,8 @@ from signal import SIGSTOP, SIGCONT
 
 vms = []
 class Bare:
-  def __init__(self, name, cmd, cpus):
-    self.name = name
-    self.cmd  = cmd
+  def __init__(self, cpus):
+    assert len(cpus) == 1, "I support only one CPU :("
     self.cpus = cpus
     self.pipe = None
     vms.append(self)
