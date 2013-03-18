@@ -360,11 +360,11 @@ if __name__ == '__main__':
 
   # EXPERIMENT 3: arbitrary tests
   if 'random' in args.tests:
-    with open_vms(cpus_all) as instances:
+    with VMS(cpus_all) as instances:
       arbitrary_tests(instances=instances, cpucfg=[1 for _ in cpus_all], num=1000)
 
   # EXPERIMENT 4: test with all counters enabled
   if 'perf_single' in args.tests:
-    with open_vms([cpus_near[0]]) as instances:
+    with VMS([cpus_near[0]]) as instances:
       inst = instances[0]
       perf_single(cg=inst.cg, Popen=inst.Popen)
