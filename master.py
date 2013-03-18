@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from collections import OrderedDict, namedtuple
 from useful.typecheck import type_check
+from useful.log import Log
 from termcolor import cprint
 import subprocess
 import argparse
@@ -266,13 +267,16 @@ def stop_instances(instances):
 
 class open_vms:
   def __init__(self, cpus=[]):
+    self.log = Log("VMS")
     self.cpus = cpus
 
   def __enter__(self):
+    self.log.info("starting instances")
     self.instances = start_instances(self.cpus)
     return self.instances
 
   def __exit__(self, type, value, traceback):
+    self.log.info("terminating instances")
     stop_instances(self.instances)
 
 
