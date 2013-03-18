@@ -230,7 +230,7 @@ def start_instances(cpus=[]):
     cmd = kvm_cmd.format(n=n)
     print("starting", cmd)
     kvmpipes += [cg.exec(cmd, bg=True)]
-    time.sleep(1)
+    time.sleep(1)  # interval between launching
 
 
   # WHAIT TILL THEY START UP
@@ -305,7 +305,8 @@ if __name__ == '__main__':
 
   # MACHINE-SPECIFIC CONFIGURATION
   if cpu_name.find("AMD") != -1:
-    idfactor = 12
+    global idfactor
+    idfactor = 3
     cpus_near = []
     cpu1 = topology.cpus[0]
     cpu2 = topology.ht_siblings[cpu1]
@@ -365,6 +366,7 @@ if __name__ == '__main__':
     arbitrary_tests(instances=instances, cpucfg=[1 for _ in cpus_all], num=1000)
     stop_instances(instances)
 
+  # EXPERIMENT 4: test with all counters enabled
   if 'perf_single' in args.tests:
     with open_vms([cpus_near[0]]) as instances:
       inst = instances[0]
