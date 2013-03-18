@@ -301,7 +301,6 @@ if __name__ == '__main__':
     error("Warning! Debug enabled")
     warmup /= 10
     measure /= 30
-    idfactor *= 100
   topology = numa.OnlineCPUTopology()
   #TODO: dump topology
   cpu_name = numa.get_cpu_name()
@@ -309,8 +308,6 @@ if __name__ == '__main__':
 
   # MACHINE-SPECIFIC CONFIGURATION
   if cpu_name.find("AMD") != -1:
-    global idfactor
-    idfactor = 3
     cpus_near = []
     cpu1 = topology.cpus[0]
     cpu2 = topology.ht_siblings[cpu1]
@@ -339,7 +336,6 @@ if __name__ == '__main__':
 
   # EXPERIMENT 1: SINGLE TASK PERFORMANCE (IDEAL PERFORMANCE)
   if 'single' in args.tests:
-    maxbusy = idfactor
     instances = start_instances([cpus_near[0]])
     inst = instances[0]
     measure_single(cg=inst.cg, Popen=inst.Popen)
@@ -348,7 +344,6 @@ if __name__ == '__main__':
   # EXPERIMENT 2: TWO TASK PERFORMANCE
   # near
   if 'double' in args.tests:
-    maxbusy = idfactor*2
     instances = start_instances(cpus_near)
     inst1 = instances[0]
     inst2 = instances[1]
@@ -365,10 +360,8 @@ if __name__ == '__main__':
 
   # EXPERIMENT 3: arbitrary tests
   if 'random' in args.tests:
-    maxbusy = idfactor * len(cpus_all)
-    instances = start_instances(cpus_all)
-    arbitrary_tests(instances=instances, cpucfg=[1 for _ in cpus_all], num=1000)
-    stop_instances(instances)
+    with open_vms(cpus_all) as instances:
+      arbitrary_tests(instances=instances, cpucfg=[1 for _ in cpus_all], num=1000)
 
   # EXPERIMENT 4: test with all counters enabled
   if 'perf_single' in args.tests:
