@@ -1,4 +1,4 @@
 kvmtests
 ========
 
-Some CPU tests, do not use them
+Some CPU tests. The code is "write-only", please do not use :)
