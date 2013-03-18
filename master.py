@@ -21,8 +21,6 @@ die     = lambda m: sys.exit(m)
 
 warmup   = 15
 measure  = 180
-idfactor = 1
-maxbusy  = 1
 
 class CG(cgroup.PerfEvent, cgroup.CPUSet):
   pass
@@ -69,11 +67,11 @@ def check_idleness(t=10, thr=0.1):
   return (cycles / t) / 10**7
 
 
-def wait_idleness():
+def wait_idleness(maxbusy=3, t=3):
   warned = False
   time.sleep(0.3)
   while True:
-    busy = check_idleness(t=3)
+    busy = check_idleness(t=t)
     if busy < maxbusy:
       break
     if not warned:
@@ -215,69 +213,75 @@ def arbitrary_tests(instances=None, cpucfg=[1,1], num=10, benchmarks=benchmarks)
   return result
 
 
-def start_instances(cpus=[]):
-  assert cpus, "please provide cpus"
-  cgroups = []
-  kvmpipes = []
-  rpcs = []
-  result = []
-
-  #START KVMS
-  info("starting kvms")
-  for n in cpus:
-    cg = CG(path="/cg%s" % n, cpus=[n])
-    cgroups  += [cg]
-    cmd = kvm_cmd.format(n=n)
-    print("starting", cmd)
-    kvmpipes += [cg.exec(cmd, bg=True)]
-    time.sleep(1)  # interval between launching
-
-
-  # WHAIT TILL THEY START UP
-  info("waiting till they finish init")
-  time.sleep(15)
-  wait_idleness()
-
-  # CREATE RPC CONNECTIONS
-  info("making connections")
-  for cpu in cpus:
-    host = "172.16.5.%s" % (cpu+1)
-    print("connecting to", host)
-    rpcs += [rpyc.connect(host, port=6666)]
-
-  for i, cg in enumerate(cgroups):
-    instance = Instance(cg=cg, kvmp=kvmpipes[i], rpc=rpcs[i], Popen=rpcs[i].root.Popen)
-    result.append(instance)
-  return result
-
-
-def stop_instances(instances):
-  info("sending powerdown commands")
-  for instance in instances:
-    instance.Popen('poweroff')
-    instance.rpc.close()
-
-  #WAIT FOR SHUTDOWN
-  for instance in instances:
-    print("waiting for", instance.kvmp, "container")
-    instance.kvmp.wait()
-    instance.cg.killall()
-    instance.cg.leave_subsys()
-
-
-class open_vms:
+class VMS:
   def __init__(self, cpus=[]):
     self.log = Log("VMS")
     self.cpus = cpus
+    self.idfactor =  check_idleness(t=3)
+    self.log.notice("idfactor is %s" % self.idfactor)
+    assert self.idfactor <= 3, "is the machine really idle?"
+
+  def start(cpus=[]):
+    assert not self.instances, "instances already started"
+    assert cpus, "please provide cpus"
+    cgroups = []
+    kvmpipes = []
+    rpcs = []
+    result = []
+
+    #START KVMS
+    info("starting kvms")
+    for n in cpus:
+      cg = CG(path="/cg%s" % n, cpus=[n])
+      cgroups  += [cg]
+      cmd = kvm_cmd.format(n=n)
+      print("starting", cmd)
+      kvmpipes += [cg.exec(cmd, bg=True)]
+      time.sleep(1)  # interval between launching
+
+    # WHAIT TILL THEY START UP
+    info("waiting till they finish init")
+    time.sleep(15)
+    wait_idleness(self.idfactor*(len(cpus)+1))
+
+    # CREATE RPC CONNECTIONS
+    info("making connections")
+    for cpu in cpus:
+      host = "172.16.5.%s" % (cpu+1)
+      print("connecting to", host)
+      rpcs += [rpyc.connect(host, port=6666)]
+
+    for i, cg in enumerate(cgroups):
+      instance = Instance(cg=cg, kvmp=kvmpipes[i], rpc=rpcs[i],
+                          Popen=rpcs[i].root.Popen)
+      result.append(instance)
+    self.instances = result
+
+  def stop(instances):
+    if not self.instances:
+      return self.log.error("instances are not started")
+    info("sending powerdown commands")
+    for instance in self.instances:
+      instance.Popen('poweroff')
+      instance.rpc.close()
+
+    #WAIT FOR SHUTDOWN
+    for instance in instances:
+      print("waiting for", instance.kvmp, "container")
+      instance.kvmp.wait()
+      instance.cg.killall()
+      instance.cg.leave_subsys()
+    self.instances = None
+
 
   def __enter__(self):
     self.log.info("starting instances")
-    self.instances = start_instances(self.cpus)
+    self.start()
     return self.instances
 
   def __exit__(self, type, value, traceback):
     self.log.info("terminating instances")
-    stop_instances(self.instances)
+    self.stop()
 
 
 if __name__ == '__main__':
