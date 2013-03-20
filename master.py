@@ -4,6 +4,7 @@ from collections import OrderedDict, namedtuple
 from useful.typecheck import type_check
 from useful.log import Log
 from termcolor import cprint
+from virt import cmd as kvmcmd
 import subprocess
 import argparse
 import socket
@@ -19,8 +20,8 @@ warning = lambda *x: cprint(" ".join(map(str, x)), color='yellow')
 error   = lambda *x: cprint(" ".join(map(str, x)), color='red')
 die     = lambda m: sys.exit(m)
 
-warmup   = 15
-measure  = 180
+warmup  = 15
+measure = 180
 
 class CG(cgroup.PerfEvent, cgroup.CPUSet):
   pass
