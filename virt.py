@@ -4,7 +4,7 @@ from kvmc import KVM, Bridged, Drive, CMD, kvms, main
 class Template(KVM):
   name  = "template"
   mem   = 1024
-  net = [Bridged(ifname="virt%s"%i, model='e1000',
+  net = [Bridged(ifname="template", model='e1000',
          mac="52:54:91:5E:38:BB", br="intbr")]
   drives = [Drive("/home/sources/perftests/arch64_template.qcow2", cache="unsafe")]
   auto  = False
