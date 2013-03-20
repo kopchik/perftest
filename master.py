@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# required: bridge_utils, qemu, lscgroup
 from collections import OrderedDict, namedtuple
 from useful.typecheck import type_check
 from useful.log import Log
@@ -12,7 +13,6 @@ import rpyc
 import numa
 import time
 import sys
-# required: brdge_utils, qemu, lscgroup
 
 info    = lambda *x: cprint(" ".join(map(str, x)), color='green')
 warning = lambda *x: cprint(" ".join(map(str, x)), color='yellow')
