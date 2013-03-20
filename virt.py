@@ -10,7 +10,7 @@ class Default(KVM):
   template = True
 
 
-for i in range(0,7):
+for i in range(0, 8):
   class MyKVM(Default):
     name = "virt%s" % i
     mem = 2048
