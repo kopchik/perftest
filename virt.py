@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from kvmc import KVM, Bridged, Drive, main
+from kvmc import KVM, Bridged, Drive, CMD, kvms, main
 
 class Default(KVM):
   mem   = 1024
@@ -18,5 +18,10 @@ for i in range(0,7):
     drives = [Drive("/home/sources/perftests/arch64_perf%s.qcow2"%i, cache="unsafe")]
 
 
+# to use from another scripts
+cmd = CMD(kvms)
+
+
+# if script is used stand-alone...
 if __name__ == '__main__':
   main()
