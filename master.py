@@ -14,6 +14,7 @@ import rpyc
 import numa
 import time
 import sys
+import pdb
 
 info    = lambda *x: cprint(" ".join(map(str, x)), color='green')
 warning = lambda *x: cprint(" ".join(map(str, x)), color='yellow')
@@ -86,7 +87,12 @@ def wait_idleness(maxbusy=3, t=3):
 
 def perf_single(cg=None, Popen=None, benchmarks=benchmarks):
   perf_single = OrderedDict()
-  p = Popen(counters_cmd, stdout=subprocess.PIPE)
+  try:
+      p = Popen(counters_cmd, stdout=subprocess.PIPE)
+  except Exception as err:
+    log.critical("cannot connect to slave: %s" % err)
+    log.critical("dropping to pdb shell")
+    pdb.set_trace()
   print(p.stdout.readall())
   die("basta cosi")
   for n,b in benchmarks.items():
