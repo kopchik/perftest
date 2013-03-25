@@ -19,6 +19,7 @@ info    = lambda *x: cprint(" ".join(map(str, x)), color='green')
 warning = lambda *x: cprint(" ".join(map(str, x)), color='yellow')
 error   = lambda *x: cprint(" ".join(map(str, x)), color='red')
 die     = lambda m: sys.exit(m)
+log     = Log("MASTER")
 
 warmup  = 15
 measure = 180
