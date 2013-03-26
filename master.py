@@ -234,8 +234,8 @@ class VMS:
     for n in self.cpus:
       cg = CG(path="/cg%s" % n, cpus=[n])
       cgroups  += [cg]
-      cmd = virtmgr.instances[str(n)].get_cmd()
-      cg.exec(cmd, bg=True)
+      pid = virtmgr.start(str(n))
+      cg.add_pid(pid)
       time.sleep(1)  # interval between launching
 
     # WHAIT TILL THEY START UP
