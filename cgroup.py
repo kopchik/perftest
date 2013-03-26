@@ -77,15 +77,20 @@ class CGroup(metaclass=TypeCheck):
       if timeout:
         signal.setitimer(0, 0, signal.ITIMER_REAL)  # disable timer
 
+  def add_pid(self, pid):
+    for subsys in self.subsystems:
+      fullpath = prefix + "/" + subsys + "/" + self.path
+      with open(fullpath + "/tasks", "a") as fd:
+        fd.write(str(pid))
+
   def get_pids(self):
-    # TODO: why cpu?
-    subsys = self.subsystems[0]
+    subsys = self.subsystems[0]  # we assume that all subsystems have the same tasks
     fullpath = prefix + "/" + subsys + "/" + self.path
     with open(fullpath + "/tasks") as fd:
       return [int(pid) for pid in fd]
 
   def join_subsys(self, name: str):
-    self.subsystems.append(name)
+    self.subsystems += [name]
     return run("cgcreate -g {name}:{path}"
                .format(name=name, path=self.path), sudo="root")
 
@@ -257,4 +262,10 @@ if __name__ == '__main__':
       self.cg.waitall(timeout=0.1, killem=True)
       self.cg.disable_ipc()
 
+    def test_add_pid(self):
+      p=run("burnP6", bg=True)
+      pid = p.pid
+      self.cg.add_pid(pid)
+      # print("pids are:", self.cg.get_pids())
+      assert pid in self.cg.get_pids()
   unittest.main()
