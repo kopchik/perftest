@@ -4,7 +4,7 @@ from collections import OrderedDict, namedtuple
 from useful.typecheck import type_check
 from useful.log import Log
 from termcolor import cprint
-from virt import cmd as kvmcmd
+from virt import manager as virtmgr
 import subprocess
 import argparse
 import socket
@@ -52,14 +52,6 @@ polute = "classes/build/polute"
 
 
 container = "systemd-nspawn -D /home/arch64_perf/ /home/sources/slave.py {port}"
-kvm_cmd = """
-qemu-system-x86_64 --enable-kvm
--smp 1 -m 1G -drive
-file=/home/sources/perftests/arch64_perf{n}.qcow2,if=virtio,cache=unsafe
- -net nic,model=e1000,macaddr=52:54:91:5E:38:0{n}
- -net tap,ifname=tap{n},script=kvm-ifup.sh,downscript=no
- -vnc localhost:{n}
-"""
 counters_cmd = """perf list hw sw cache tracepoint | awk '{print $1}' |  grep -v '^$' | tr '\n' ','"""
 
 
@@ -226,7 +218,6 @@ class VMS:
     self.log = Log("VMS")
     assert cpus, "please provide cpus"
     self.cpus = cpus
-    self.instances = None
 
     self.idfactor =  check_idleness(t=3)
     self.log.notice("idfactor is %s" % self.idfactor)
@@ -235,18 +226,15 @@ class VMS:
   def start(self):
     assert not self.instances, "instances already started"
     cgroups = []
-    kvmpipes = []
     rpcs = []
-    self.instances = []
 
     #START KVMS
     info("starting kvms")
     for n in self.cpus:
       cg = CG(path="/cg%s" % n, cpus=[n])
       cgroups  += [cg]
-      cmd = kvm_cmd.format(n=n)
-      print("starting", cmd)
-      kvmpipes += [cg.exec(cmd, bg=True)]
+      cmd = virtmgr.instances[str(i)].get_cmd()
+      cg.exec(cmd, bg=True)
       time.sleep(1)  # interval between launching
 
     # WHAIT TILL THEY START UP
@@ -262,25 +250,11 @@ class VMS:
       rpcs += [rpyc.connect(host, port=6666)]
 
     for i, cg in enumerate(cgroups):
-      instance = Instance(cg=cg, kvmp=kvmpipes[i], rpc=rpcs[i],
+      instance = Instance(cg=cg, rpc=rpcs[i],
                           Popen=rpcs[i].root.Popen)
-      self.instances.append(instance)
 
   def stop(self):
-    if not self.instances:
-      return self.log.error("instances are not started")
-    info("sending powerdown commands")
-    for instance in self.instances:
-      instance.Popen('poweroff')
-      instance.rpc.close()
-
-    #WAIT FOR SHUTDOWN
-    for instance in instances:
-      print("waiting for", instance.kvmp, "container")
-      instance.kvmp.wait()
-      instance.cg.killall()
-      instance.cg.leave_subsys()
-    self.instances = None
+   virtmgr.graceful(timeout=30)
 
   def __enter__(self):
     self.log.info("starting instances")
