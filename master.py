@@ -233,7 +233,7 @@ class VMS:
     for n in self.cpus:
       cg = CG(path="/cg%s" % n, cpus=[n])
       cgroups  += [cg]
-      cmd = virtmgr.instances[str(i)].get_cmd()
+      cmd = virtmgr.instances[str(n)].get_cmd()
       cg.exec(cmd, bg=True)
       time.sleep(1)  # interval between launching
 
