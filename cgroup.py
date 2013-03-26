@@ -51,7 +51,7 @@ class CGroup(metaclass=TypeCheck):
       raise Exception("Wrong arguments")
 
     if timeout is not False:
-      assert timeout != 0, "timeout should be positive"
+      assert timeout > 0, "timeout should be positive"
 
     if timeout:
       signal.signal(signal.SIGALRM, lambda x,y: None)
