@@ -221,7 +221,7 @@ class VMS:
 
     self.idfactor =  check_idleness(t=3)
     self.log.notice("idfactor is %s" % self.idfactor)
-    assert self.idfactor <= 4, "is the machine really idle?"
+    assert self.idfactor <= 7, "is the machine really idle?"
 
   def start(self):
     assert not self.instances, "instances already started"
