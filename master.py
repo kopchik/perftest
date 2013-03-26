@@ -224,9 +224,10 @@ class VMS:
     assert self.idfactor <= 7, "is the machine really idle?"
 
   def start(self):
-    assert not self.instances, "instances already started"
     cgroups = []
     rpcs = []
+
+    self.stop()  # just to be sure
 
     #START KVMS
     info("starting kvms")
@@ -318,7 +319,7 @@ if __name__ == '__main__':
   # PRE-FLIGHT CHECK
   if not args.no_start:
     warning("killing all kvms")
-    subprocess.call("killall -w -q kvm".split())
+    virtmgr.graceful(timeout=30)
     subprocess.call("/home/sources/perftests/regen_img.sh")
     subprocess.check_output("sync")
 
