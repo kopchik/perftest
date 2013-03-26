@@ -273,6 +273,8 @@ if __name__ == '__main__':
   parser.add_argument('--no-start', type=bool, default=False,
       help="Assume that instances are already started. Images are not regenerated, \
             VMs are not killed on start.")
+  parser.add_argument('--idlness', type=bool, const=True, default=False, nargs='?',
+      help="measure idlness and exit")
 
   args = parser.parse_args()
   print(args)
@@ -308,6 +310,10 @@ if __name__ == '__main__':
     raise Exception("Unknown machine")
   print("cpus_near:", cpus_near, "cpus_far:", cpus_far)
 
+  if args.idlness:
+    log.debug("measuing idlness")
+    print("idlness is", check_idleness())
+    sys.exit()
 
   # PRE-FLIGHT CHECK
   if not args.no_start:
