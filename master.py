@@ -241,7 +241,7 @@ class VMS:
     # WHAIT TILL THEY START UP
     idlness = self.idfactor*(len(self.cpus)+2)
     self.log.info("waiting till they finish init")
-    self.log.info("expected idleness is ")
+    self.log.info("expected idleness is %s" % idleness)
     time.sleep(15)
     wait_idleness(idleness)
 
