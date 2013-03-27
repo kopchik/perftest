@@ -27,7 +27,7 @@ measure = 180
 
 class CG(cgroup.PerfEvent, cgroup.CPUSet):
   pass
-Instance = namedtuple("Instance", ["cg", "kvmp", "rpc", "Popen"])
+Instance = namedtuple("Instance", ["cg", "rpc", "Popen"])
 
 benchmarks = dict(
 matrix = "/home/sources/cputests/matrix.py 1024 1000",
@@ -239,9 +239,11 @@ class VMS:
       time.sleep(1)  # interval between launching
 
     # WHAIT TILL THEY START UP
-    info("waiting till they finish init")
+    idlness = self.idfactor*(len(self.cpus)+2)
+    self.log.info("waiting till they finish init")
+    self.log.info("expected idleness is ")
     time.sleep(15)
-    wait_idleness(self.idfactor*(len(self.cpus)+1))
+    wait_idleness(idleness)
 
     # CREATE RPC CONNECTIONS
     info("making connections")
