@@ -9,14 +9,15 @@ class Template(KVM):
   drives = [Drive("/home/sources/perftests/arch64_template.qcow2",
             cache="unsafe")]
   auto  = False
+template = Template()
 
 for i in range(0, 8):
-  class MyKVM(Template):
-    name = str(i)
+  Template(
+    name = str(i),
     net = [Bridged(ifname="virt%s"%i, model='e1000',
-           mac="52:54:91:5E:38:%02x"%i, br="intbr")]
+           mac="52:54:91:5E:38:%02x"%i, br="intbr")],
     drives = [Drive("/home/sources/perftests/arch64_perf%s.qcow2"%i,
-              cache="unsafe")]
+              cache="unsafe")])
 
 
 # if script is used stand-alone...
