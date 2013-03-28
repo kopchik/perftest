@@ -239,7 +239,7 @@ class VMS:
       time.sleep(1)  # interval between launching
 
     # WHAIT TILL THEY START UP
-    idlness = self.idfactor*(len(self.cpus)+2)
+    idleness = self.idfactor*(len(self.cpus)+2)
     self.log.info("waiting till they finish init")
     self.log.info("expected idleness is %s" % idleness)
     time.sleep(15)
@@ -262,7 +262,7 @@ class VMS:
   def __enter__(self):
     self.log.info("starting instances")
     self.start()
-    return self.instances
+    return virtmgr.instances
 
   def __exit__(self, type, value, traceback):
     self.log.info("terminating instances")
