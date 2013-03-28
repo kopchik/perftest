@@ -357,5 +357,5 @@ if __name__ == '__main__':
   # EXPERIMENT 4: test with all counters enabled
   if 'perf_single' in args.tests:
     with VMS([cpus_near[0]]) as instances:
-      inst = instances[0]
+      inst = instances["0"]
       perf_single(cg=inst.cg, Popen=inst.Popen)
