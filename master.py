@@ -236,7 +236,7 @@ class VMS:
       cgroups  += [cg]
       pid = virtmgr.start(str(n))
       cg.add_pid(pid)
-      time.sleep(1)  # interval between launching
+      time.sleep(0.5)  # interval between launching
 
     # WHAIT TILL THEY START UP
     idlness = self.idfactor*(len(self.cpus)+2)
