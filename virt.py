@@ -18,11 +18,8 @@ class CGManager(Manager):
     super().__init__()
 
   def start(self, name):
-    print("test")
-    assert isinstance(name, str), "name should be string"
-    inst = self.instances[name]
+    pid = super().start(name)
     cg   = self.cgroups[name]
-    pid  = inst.start()
     cg.add_pid(pid)
 
   def __enter__(self):
