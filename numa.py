@@ -80,8 +80,7 @@ class OnlineCPUTopology:
   def get_thread_sibling(self, cpu):
     siblings = read_int_list(PREFIX + "cpu/cpu%s/topology/thread_siblings_list" % cpu)
     siblings.remove(cpu)
-    assert len(siblings) == 1, "more than one sibling??"
-    return siblings[0]
+    return siblings
 
   def __init__(self):
     self.cpus  = read_int_list(PREFIX + "cpu/online")
