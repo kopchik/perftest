@@ -104,8 +104,7 @@ def perf_single(cgkvm, benchmarks=benchmarks):
   return perf_single
 
 
-# @type_check
-def measure_single(cg: CG=None, Popen=None, benchmarks=benchmarks):
+def measure_single(cg, Popen, benchmarks=benchmarks):
   info("measuring performance of single tasks")
   assert cg and Popen and benchmarks, "please provide cg, Popen and benchmarks"
   global warmup
@@ -135,8 +134,7 @@ def measure_single(cg: CG=None, Popen=None, benchmarks=benchmarks):
   return single_ipc
 
 
-# @type_check
-def measure_double(cg1: CG=None, cg2: CG=None, Popen1=None, Popen2=None, benchmarks=benchmarks):
+def measure_double(cg1, cg2, Popen1, Popen2, benchmarks=benchmarks):
   global warmup
   global measure
   assert cg1 and cg2, "I need cgroups to work with"
@@ -272,17 +270,16 @@ if __name__ == '__main__':
       help="measure idlness and exit")
 
   args = parser.parse_args()
-  print(args)
-
 
   # INIT
   if args.debug:
-    error("Warning! Debug enabled")
+    log.critical("Warning! Debug enabled")
     warmup /= 10
     measure /= 30
   topology = numa.OnlineCPUTopology()
-  #TODO: dump topology
+  log.notice("topology:\n%s" % topology)
   cpu_name = numa.get_cpu_name()
+  log.debug("cpu name: %s" % cpu_name)
   hostname = socket.gethostname()
 
   # MACHINE-SPECIFIC CONFIGURATION
