@@ -1,19 +1,29 @@
 #!/usr/bin/env python3
 from kvmc import KVM, Bridged, Drive, Manager, main
 from numa import OnlineCPUTopology
+import cgroup
 numainfo = OnlineCPUTopology()
 CPUS = numainfo.cpus
+
+class CG(cgroup.PerfEvent, cgroup.CPUSet):
+  pass
 
 class CGManager(Manager):
   def __init__(self, cpus):
     self.cpus = cpus
+    self.cgroups = {}
+    for cpu in CPUS:
+      name = str(cpu)
+      self.cgroups[name] = CG(path="/cg%s" % name, cpus=[name])
     super().__init__()
 
   def start(self, name):
+    print("test")
     assert isinstance(name, str), "name should be string"
     inst = self.instances[name]
-    pid = inst.start()
-    self.cg.add_pid(pid)
+    cg   = self.cgroups[name]
+    pid  = inst.start()
+    cg.add_pid(pid)
 
   def __enter__(self):
     self.stop_all()

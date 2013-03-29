@@ -4,7 +4,7 @@ from collections import OrderedDict, namedtuple
 from useful.typecheck import type_check
 from useful.log import Log
 from termcolor import cprint
-from virt import manager as virtmgr
+from virt import cgmgr
 import subprocess
 import argparse
 import socket
@@ -25,9 +25,6 @@ log     = Log("MASTER")
 warmup  = 15
 measure = 180
 
-class CG(cgroup.PerfEvent, cgroup.CPUSet):
-  pass
-Instance = namedtuple("Instance", ["cg", "rpc", "Popen"])
 
 benchmarks = dict(
 matrix = "/home/sources/cputests/matrix.py 1024 1000",
@@ -77,7 +74,7 @@ def wait_idleness(maxbusy=3, t=3):
     time.sleep(1)
 
 
-def perf_single(cg=None, Popen=None, benchmarks=benchmarks):
+def perf_single(cgkvm, benchmarks=benchmarks):
   perf_single = OrderedDict()
   try:
       p = Popen(counters_cmd, stdout=subprocess.PIPE)
@@ -213,10 +210,10 @@ def arbitrary_tests(instances=None, cpucfg=[1,1], num=10, benchmarks=benchmarks)
   return result
 
 
+
 class VMS:
-  def __init__(self, cpus=[]):
+  def __init__(self, cpus):
     self.log = Log("VMS")
-    assert cpus, "please provide cpus"
     self.cpus = cpus
 
     self.idfactor =  check_idleness(t=3)
@@ -226,22 +223,17 @@ class VMS:
   def start(self):
     cgroups = []
     rpcs = []
-
     self.stop()  # just to be sure
 
     #START KVMS
     info("starting kvms")
     for n in self.cpus:
-      cg = CG(path="/cg%s" % n, cpus=[n])
-      cgroups  += [cg]
-      pid = virtmgr.start(str(n))
-      cg.add_pid(pid)
+      cgkvm = CGKVM(n)
       time.sleep(0.5)  # interval between launching
 
     # WHAIT TILL THEY START UP
     idleness = self.idfactor*(len(self.cpus)+2)
-    self.log.info("waiting till they finish init")
-    self.log.info("expected idleness is %s" % idleness)
+    self.log.info("waiting for instances, expected idleness is <%s" % idleness)
     time.sleep(15)
     wait_idleness(idleness)
 
@@ -356,6 +348,5 @@ if __name__ == '__main__':
 
   # EXPERIMENT 4: test with all counters enabled
   if 'perf_single' in args.tests:
-    with VMS([cpus_near[0]]) as instances:
-      inst = instances["0"]
-      perf_single(cg=inst.cg, Popen=inst.Popen)
+    with CGKVM(cpus_near[0]) as cgkvm:
+      perf_single(cgkvm)
