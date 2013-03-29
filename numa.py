@@ -15,8 +15,8 @@ def get_online_nodes():
 
 
 def get_cpu_name():
-  cpus_raw = run("sudo dmidecode  -s processor-version")
-  cpus = set(cpus_raw.strip().split('\n'))
+  cpus_raw = run("cat /proc/cpuinfo | grep 'model name' | cut -d' ' -f3-", shell=True)
+  cpus = set(cpus_raw.strip('\n').split('\n'))
   assert len(cpus) == 1, "Omg, different CPUs installed in this machine??"
   return cpus.pop()
 
@@ -55,7 +55,7 @@ class CPU:
 
     def get_cores(self):
       TODO
- 
+
 class Core:
   def __init__(self, id, lvl):
     self.id = id
