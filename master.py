@@ -296,6 +296,10 @@ if __name__ == '__main__':
       cpus_near = topology.cpus_no_ht
       cpus_far = None
       cpus_all = topology.cpus_no_ht
+    elif hostname == 'p1':
+      cpus_near = topology.cpus_no_ht
+      cpus_far = None
+      cpus_all = cpus_near
     else:
       raise Exception("Unknown configuration")
   else:
@@ -303,8 +307,8 @@ if __name__ == '__main__':
   print("cpus_near:", cpus_near, "cpus_far:", cpus_far)
 
   if args.idlness:
-    log.debug("measuing idlness")
-    print("idlness is", check_idleness())
+    log.debug("measuring idlness")
+    print("idleness is", check_idleness())
     sys.exit()
 
   # PRE-FLIGHT CHECK
