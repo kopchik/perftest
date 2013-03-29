@@ -6,8 +6,8 @@ import os
 
 
 @type_check
-def run(cmd, sudo: str=None, bg=False):
-  if isinstance(cmd, str):
+def run(cmd, sudo: str=None, shell=False, bg=False):
+  if isinstance(cmd, str) and not shell:
     cmd = shlex.split(cmd)
   if sudo:
     cmd = ["sudo", "-u", sudo] + cmd
@@ -16,7 +16,7 @@ def run(cmd, sudo: str=None, bg=False):
     p = subprocess.Popen(cmd)
     return p
   else:
-    output = subprocess.check_output(cmd)
+    output = subprocess.check_output(cmd, shell=shell)
     return output.decode()
 
 
