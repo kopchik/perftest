@@ -10,12 +10,12 @@ class CG(cgroup.PerfEvent, cgroup.CPUSet):
 
 class CGManager(Manager):
   def __init__(self, cpus):
+    super().__init__()
     self.cpus = cpus
     self.cgroups = {}
     for cpu in CPUS:
       name = str(cpu)
       self.cgroups[name] = CG(path="/cg%s" % name, cpus=[name])
-    super().__init__()
 
   def start(self, name):
     pid = super().start(name)
@@ -23,7 +23,7 @@ class CGManager(Manager):
     cg.add_pid(pid)
 
   def __enter__(self):
-    self.stop_all()
+    self.graceful(timeout=30)
     for cpu in self.cpus:
       self.start(str(cpu))
 
