@@ -73,8 +73,7 @@ def wait_idleness(maxbusy=3, t=3):
     sys.stdout.flush()
     time.sleep(1)
 
-
-def perf_single(cgkvm, benchmarks=benchmarks):
+def perf_single(cgkvm, Popen, benchmarks=benchmarks):
   perf_single = OrderedDict()
   try:
       p = Popen(counters_cmd, stdout=subprocess.PIPE)
@@ -106,7 +105,6 @@ def perf_single(cgkvm, benchmarks=benchmarks):
 
 def measure_single(cg, Popen, benchmarks=benchmarks):
   info("measuring performance of single tasks")
-  assert cg and Popen and benchmarks, "please provide cg, Popen and benchmarks"
   global warmup
   global measure
 
@@ -209,14 +207,10 @@ def arbitrary_tests(instances=None, cpucfg=[1,1], num=10, benchmarks=benchmarks)
 
 
 
-class VMS:
-  def __init__(self, cpus):
-    self.log = Log("VMS")
-    self.cpus = cpus
 
-    self.idfactor =  check_idleness(t=3)
-    self.log.notice("idfactor is %s" % self.idfactor)
-    assert self.idfactor <= 7, "is the machine really idle?"
+    # self.idfactor =  check_idleness(t=3)
+    # self.log.notice("idfactor is %s" % self.idfactor)
+    # assert self.idfactor <= 7, "is the machine really idle?"
 
   def start(self):
     cgroups = []
@@ -229,7 +223,7 @@ class VMS:
       cgkvm = CGKVM(n)
       time.sleep(0.5)  # interval between launching
 
-    # WHAIT TILL THEY START UP
+    # WAIT TILL THEY START UP
     idleness = self.idfactor*(len(self.cpus)+2)
     self.log.info("waiting for instances, expected idleness is <%s" % idleness)
     time.sleep(15)
@@ -246,17 +240,7 @@ class VMS:
       instance = Instance(cg=cg, rpc=rpcs[i],
                           Popen=rpcs[i].root.Popen)
 
-  def stop(self):
-   virtmgr.graceful(timeout=30)
 
-  def __enter__(self):
-    self.log.info("starting instances")
-    self.start()
-    return virtmgr.instances
-
-  def __exit__(self, type, value, traceback):
-    self.log.info("terminating instances")
-    self.stop()
 
 
 if __name__ == '__main__':
@@ -283,7 +267,7 @@ if __name__ == '__main__':
   hostname = socket.gethostname()
 
   # MACHINE-SPECIFIC CONFIGURATION
-  if cpu_name.find("AMD") != -1:
+  if hostname == 'fx':
     cpus_near = []
     cpu1 = topology.cpus[0]
     cpu2 = topology.ht_siblings[cpu1]
@@ -291,19 +275,16 @@ if __name__ == '__main__':
     del cpu1, cpu2
     cpus_far = topology.cpus_no_ht[:2]
     cpus_all = topology.cpus
-  elif cpu_name.find("Intel") != -1:
-    if hostname == 'ux32vd':
-      cpus_near = topology.cpus_no_ht
-      cpus_far = None
-      cpus_all = topology.cpus_no_ht
-    elif hostname == 'p1':
-      cpus_near = topology.cpus_no_ht
-      cpus_far = None
-      cpus_all = cpus_near
-    else:
-      raise Exception("Unknown configuration")
+  elif hostname == 'ux32vd':
+    cpus_near = topology.cpus_no_ht
+    cpus_far = None
+    cpus_all = topology.cpus_no_ht
+  elif hostname == 'p1':
+    cpus_near = topology.cpus_no_ht
+    cpus_far = None
+    cpus_all = cpus_near
   else:
-    raise Exception("Unknown machine")
+    raise Exception("No profile for machine % " % hostname)
   print("cpus_near:", cpus_near, "cpus_far:", cpus_far)
 
   if args.idlness:
@@ -314,9 +295,10 @@ if __name__ == '__main__':
   # PRE-FLIGHT CHECK
   if not args.no_start:
     warning("killing all kvms")
-    virtmgr.graceful(timeout=30)
+    cgmgr.graceful(timeout=30)
     subprocess.call("/home/sources/perftests/regen_img.sh")
     subprocess.check_output("sync")
+
 
   # EXPERIMENT 1: SINGLE TASK PERFORMANCE (IDEAL PERFORMANCE)
   if 'single' in args.tests:
@@ -347,7 +329,21 @@ if __name__ == '__main__':
     with VMS(cpus_all) as instances:
       arbitrary_tests(instances=instances, cpucfg=[1 for _ in cpus_all], num=1000)
 
+
   # EXPERIMENT 4: test with all counters enabled
   if 'perf_single' in args.tests:
-    with CGKVM(cpus_near[0]) as cgkvm:
-      perf_single(cgkvm)
+    with cgmgr:
+      cgmgr.start("0")
+      time.sleep(15)
+      # wait_idleness(7)
+      for x in range(100):
+        try:
+          rpc = rpyc.connect("172.16.5.10", port=6666)
+          break
+        except OSError:
+          log.notice("cannot connect")
+        time.sleep(1)
+      else:
+        raise Exception("cannot connect to host")
+      RPopen = rpc.root.Popen
+      perf_single(cgmgr, RPopen)
