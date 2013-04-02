@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-from kvmc import KVM, Bridged, Drive, Manager, main
+from libvmc import KVM, Bridged, Drive, Manager, main
 from numa import OnlineCPUTopology
 import cgroup
+
 numainfo = OnlineCPUTopology()
 CPUS = numainfo.cpus
 
+
 class CG(cgroup.PerfEvent, cgroup.CPUSet):
   pass
+
 
 class CGManager(Manager):
   def __init__(self, cpus):
@@ -22,10 +25,13 @@ class CGManager(Manager):
     cg   = self.cgroups[name]
     cg.add_pid(pid)
 
+  def started(self):
+    return list(filter(lambda x: x.is_running(), self.instances.values()))
+
   def __enter__(self):
     self.graceful(timeout=30)
-    for cpu in self.cpus:
-      self.start(str(cpu))
+    #for cpu in self.cpus:
+    #  self.start(str(cpu))
 
   def __exit__(self, type, value, traceback):
     self.graceful(timeout=30)
