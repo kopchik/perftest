@@ -1,8 +1,34 @@
 #!/usr/bin/env python3
 from useful.typecheck import type_check
+from useful.log import Log
 import subprocess
 import shlex
+import time
+import sys
 import os
+
+log = Log("UTILS")
+
+def check_idleness(t=10, thr=0.1):
+  cmd = "sudo perf stat -a -e cycles --log-fd 1 -x, sleep {t}"
+  cycles_raw = subprocess.check_output(cmd.format(t=t), shell=True)
+  cycles = int(cycles_raw.decode().split(',')[0])
+  return (cycles / t) / 10**7
+
+
+def wait_idleness(maxbusy=3, t=3):
+  warned = False
+  time.sleep(0.3)
+  while True:
+    busy = check_idleness(t=t)
+    if busy < maxbusy:
+      break
+    if not warned:
+      log.notice("node is still busy more than %s" % maxbusy)
+      warned = True
+    print(busy, end=' ')
+    sys.stdout.flush()
+    time.sleep(1)
 
 
 @type_check
@@ -58,6 +84,17 @@ def str2list(s: str):
 
 def str2set(s):
   return set(str2list(s))
+
+
+def retry(f, args, kwargs, sleep=1, retries=20):
+  for x in range(retries):
+    try:
+      return f(*args, **kwargs)
+    except Exception as err:
+      log.debug("retry: %s" % err)
+    time.sleep(sleep)
+  else:
+    raise Exception("ne shmogla")
 
 
 if __name__ == '__main__':

@@ -69,6 +69,7 @@ class IPC:
   def close(self):
     self.cgev.close()
 
+
 if __name__ == '__main__':
   import time
 

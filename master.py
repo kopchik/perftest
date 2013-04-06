@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 # required: bridge_utils, qemu, lscgroup
 from collections import OrderedDict, namedtuple
+from signal import SIGINT
 from useful.typecheck import type_check
-from useful.log import Log
+from utils import retry, wait_idleness
+from subprocess import Popen, PIPE
 from termcolor import cprint
+from useful.log import Log
 from virt import cgmgr
 import subprocess
 import argparse
@@ -15,6 +18,7 @@ import numa
 import time
 import sys
 import pdb
+
 
 info    = lambda *x: cprint(" ".join(map(str, x)), color='green')
 warning = lambda *x: cprint(" ".join(map(str, x)), color='yellow')
@@ -48,57 +52,28 @@ polute = "classes/build/polute"
 )
 
 
-container = "systemd-nspawn -D /home/arch64_perf/ /home/sources/slave.py {port}"
-counters_cmd = """perf list hw sw cache tracepoint | awk '{print $1}' |  grep -v '^$' | tr '\n' ','"""
-
-
-def check_idleness(t=10, thr=0.1):
-  cmd = "sudo perf stat -a -e cycles --log-fd 1 -x, sleep {t}"
-  cycles_raw = subprocess.check_output(cmd.format(t=t), shell=True)
-  cycles = int(cycles_raw.decode().split(',')[0])
-  return (cycles / t) / 10**7
-
-
-def wait_idleness(maxbusy=3, t=3):
-  warned = False
-  time.sleep(0.3)
-  while True:
-    busy = check_idleness(t=t)
-    if busy < maxbusy:
-      break
-    if not warned:
-      warning("node is still busy more than", maxbusy)
-      warned = True
-    print(busy, end=' ')
-    sys.stdout.flush()
-    time.sleep(1)
-
-def perf_single(cgkvm, Popen, benchmarks=benchmarks):
-  perf_single = OrderedDict()
-  try:
-      p = Popen(counters_cmd, stdout=subprocess.PIPE)
-  except Exception as err:
-    log.critical("cannot connect to slave: %s" % err)
-    log.critical("dropping to pdb shell")
-    pdb.set_trace()
-  print(p.stdout.readall())
-  die("basta cosi")
+def perf_single(vmpid, RPopen, benchmarks=benchmarks):
   for n,b in benchmarks.items():
     # start
     print("starting", n)
-    p = Popen(b)
+    log.debug("launching %s" % b)
+    bp = RPopen(b)  # bp -- benchmark pipe
+    log.debug("warmup sleeping")
     time.sleep(warmup)
-    cg.enable_ipc()
-    cg.get_ipc(reset=True)
 
     # measurement
+    log.debug("opening perf")
+    cmd = "sudo perf stat --log-fd 1 -x, -p %s" % vmpid
+    log.notice("running %s" % cmd)
+    pp = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
     time.sleep(measure)
-    perf_single[n] = cg.get_ipc()
-    print("IPC", perf_single[n])
+    pp.send_signal(SIGINT)
+    raw_data = pp.stdout.readall()
+    log.notice(raw_data)
 
     # termination
-    assert p.poll() is None, "test unexpectedly terminated"
-    p.killall()
+    assert bp.poll() is None, "test unexpectedly terminated"
+    bp.killall()
     wait_idleness()
   return perf_single
 
@@ -333,17 +308,9 @@ if __name__ == '__main__':
   # EXPERIMENT 4: test with all counters enabled
   if 'perf_single' in args.tests:
     with cgmgr:
-      cgmgr.start("0")
-      time.sleep(15)
-      # wait_idleness(7)
-      for x in range(100):
-        try:
-          rpc = rpyc.connect("172.16.5.10", port=6666)
-          break
-        except OSError:
-          log.notice("cannot connect")
-        time.sleep(1)
-      else:
-        raise Exception("cannot connect to host")
+      vmpid = cgmgr.start("0")
+      time.sleep(10)
+      # TODO wait_idleness(7)
+      rpc = retry(rpyc.connect, args=("172.16.5.10",), kwargs={"port":6666}, retries=10)
       RPopen = rpc.root.Popen
-      perf_single(cgmgr, RPopen)
+      perf_single(vmpid=vmpid, RPopen=RPopen)
