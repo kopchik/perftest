@@ -19,11 +19,13 @@ class CGManager(Manager):
     for cpu in CPUS:
       name = str(cpu)
       self.cgroups[name] = CG(path="/cg%s" % name, cpus=[name])
+    self.cgroups["template"] = self.cgroups["0"]  # for template machine
 
   def start(self, name):
-    pid = super().start(name)
     cg   = self.cgroups[name]
+    pid = super().start(name)
     cg.add_pid(pid)
+    return pid
 
   def started(self):
     return list(filter(lambda x: x.is_running(), self.instances.values()))
