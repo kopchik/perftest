@@ -3,13 +3,14 @@
 from collections import OrderedDict, namedtuple
 from signal import SIGINT
 from useful.typecheck import type_check
-from utils import retry, wait_idleness
+from utils import retry, check_idleness, wait_idleness
 from subprocess import Popen, PIPE
 from termcolor import cprint
 from useful.log import Log
 from virt import cgmgr
 import subprocess
 import argparse
+import perftool
 import socket
 import random
 import cgroup
@@ -26,9 +27,10 @@ error   = lambda *x: cprint(" ".join(map(str, x)), color='red')
 die     = lambda m: sys.exit(m)
 log     = Log("MASTER")
 
-warmup  = 15
-measure = 180
-
+class cfg:
+  warmup  = 15
+  measure = 180
+  idfactor= 7
 
 benchmarks = dict(
 matrix = "/home/sources/cputests/matrix.py 1024 1000",
@@ -53,29 +55,25 @@ polute = "classes/build/polute"
 
 
 def perf_single(vmpid, RPopen, benchmarks=benchmarks):
+  result = {}
   for n,b in benchmarks.items():
     # start
     print("starting", n)
     log.debug("launching %s" % b)
-    bp = RPopen(b)  # bp -- benchmark pipe
+    p = RPopen(b)  # p -- benchmark pipe
     log.debug("warmup sleeping")
-    time.sleep(warmup)
+    time.sleep(cfg.warmup)
 
     # measurement
-    log.debug("opening perf")
-    cmd = "sudo perf stat --log-fd 1 -x, -p %s" % vmpid
-    log.notice("running %s" % cmd)
-    pp = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
-    time.sleep(measure)
-    pp.send_signal(SIGINT)
-    raw_data = pp.stdout.readall()
-    log.notice(raw_data)
+    stat = perftool.stat(pid=vmpid, events=['cycles'], t=cfg.measure)
+    result[b] = stat
+    print(result)
 
     # termination
-    assert bp.poll() is None, "test unexpectedly terminated"
-    bp.killall()
-    wait_idleness()
-  return perf_single
+    assert p.poll() is None, "test unexpectedly terminated"
+    p.killall()
+    wait_idleness(cfg.idfactor*2)
+  return result
 
 
 def measure_single(cg, Popen, benchmarks=benchmarks):
@@ -102,7 +100,7 @@ def measure_single(cg, Popen, benchmarks=benchmarks):
     assert p.poll() is None, "test unexpectedly terminated"
     p.killall()
     # wait till the test is terminated completely
-    wait_idleness()
+    wait_idleness(cfg.idfactor*2)
   print("the resulting IPC is:\n", single_ipc)
   return single_ipc
 
@@ -218,7 +216,7 @@ def arbitrary_tests(instances=None, cpucfg=[1,1], num=10, benchmarks=benchmarks)
 
 
 
-if __name__ == '__main__':
+def main():
   parser = argparse.ArgumentParser(description='Run experiments')
   parser.add_argument('--debug', default=False, type=bool, const=True, nargs='?', help='enable debug mode')
   parser.add_argument('-t', '--tests', default=['single', 'double', 'random', 'perf_single'], nargs='*')
@@ -231,17 +229,13 @@ if __name__ == '__main__':
   args = parser.parse_args()
 
   # INIT
-  if args.debug:
-    log.critical("Warning! Debug enabled")
-    warmup /= 10
-    measure /= 30
   topology = numa.OnlineCPUTopology()
   log.notice("topology:\n%s" % topology)
   cpu_name = numa.get_cpu_name()
   log.debug("cpu name: %s" % cpu_name)
-  hostname = socket.gethostname()
 
   # MACHINE-SPECIFIC CONFIGURATION
+  hostname = socket.gethostname()
   if hostname == 'fx':
     cpus_near = []
     cpu1 = topology.cpus[0]
@@ -254,6 +248,7 @@ if __name__ == '__main__':
     cpus_near = topology.cpus_no_ht
     cpus_far = None
     cpus_all = topology.cpus_no_ht
+    cfg.idfactor = 3
   elif hostname == 'p1':
     cpus_near = topology.cpus_no_ht
     cpus_far = None
@@ -262,10 +257,12 @@ if __name__ == '__main__':
     raise Exception("No profile for machine % " % hostname)
   print("cpus_near:", cpus_near, "cpus_far:", cpus_far)
 
-  if args.idlness:
-    log.debug("measuring idlness")
-    print("idleness is", check_idleness())
-    sys.exit()
+  if args.debug:
+    log.critical("Warning! Debug enabled")
+    log.notice(args)
+    cfg.warmup  /= 10
+    cfg.measure /= 30
+    cfg.idfactor *= 100
 
   # PRE-FLIGHT CHECK
   if not args.no_start:
@@ -274,6 +271,9 @@ if __name__ == '__main__':
     subprocess.call("/home/sources/perftests/regen_img.sh")
     subprocess.check_output("sync")
 
+  if args.idlness:
+    log.debug("measuring idlness")
+    return print("idleness is", check_idleness())
 
   # EXPERIMENT 1: SINGLE TASK PERFORMANCE (IDEAL PERFORMANCE)
   if 'single' in args.tests:
@@ -298,12 +298,10 @@ if __name__ == '__main__':
       measure_double(cg1=inst1.cg, cg2=inst2.cg, Popen1=inst1.Popen, Popen2=inst2.Popen)
       stop_instances(instances)
 
-
   # EXPERIMENT 3: arbitrary tests
   if 'random' in args.tests:
     with VMS(cpus_all) as instances:
       arbitrary_tests(instances=instances, cpucfg=[1 for _ in cpus_all], num=1000)
-
 
   # EXPERIMENT 4: test with all counters enabled
   if 'perf_single' in args.tests:
@@ -314,3 +312,7 @@ if __name__ == '__main__':
       rpc = retry(rpyc.connect, args=("172.16.5.10",), kwargs={"port":6666}, retries=10)
       RPopen = rpc.root.Popen
       perf_single(vmpid=vmpid, RPopen=RPopen)
+
+
+if __name__ == '__main__':
+  main()
