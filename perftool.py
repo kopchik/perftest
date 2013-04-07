@@ -47,7 +47,7 @@ def stat(pid, events, t):
   termios.tcsetattr(fd, termios.TCSADRAIN, flags)
 
   time.sleep(t)
-  os.write(fd, b'\x03')
+  os.write(fd, b'\x03') # TODO: change to termios.tcgetattr(sys.stdin)[-1][termios.VINTR]
   os.waitpid(pid, 0)  
   raw_data = os.read(fd, 65535)
   return raw_data.decode()
