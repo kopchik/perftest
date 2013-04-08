@@ -56,17 +56,16 @@ polute = "classes/build/polute"
 
 def perf_single(vmpid, RPopen, benchmarks=benchmarks):
   result = {}
-  for n,b in benchmarks.items():
+  for name, cmd in benchmarks.items():
     # start
-    print("starting", n)
-    log.debug("launching %s" % b)
-    p = RPopen(b)  # p -- benchmark pipe
-    log.debug("warmup sleeping")
-    time.sleep(cfg.warmup)
+    log.debug("launching %s (%s)" % (name, cmd))
+    p = RPopen(cmd)  # p -- benchmark pipe
 
     # measurement
+    log.debug("warmup sleeping")
+    time.sleep(cfg.warmup)
     stat = perftool.stat(pid=vmpid, events=['cycles'], t=cfg.measure)
-    result[b] = stat
+    result[name] = stat
     print(result)
 
     # termination
