@@ -310,8 +310,8 @@ def main():
       # TODO wait_idleness(7)
       rpc = retry(rpyc.connect, args=("172.16.5.10",), kwargs={"port":6666}, retries=10)
       RPopen = rpc.root.Popen
-      perf_single(vmpid=vmpid, RPopen=RPopen)
-
+      r = perf_single(vmpid=vmpid, RPopen=RPopen)
+      print(r)
 
 if __name__ == '__main__':
   main()

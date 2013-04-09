@@ -36,7 +36,6 @@ def osexec(cmd):
 def stat(pid, events, t):
   evcmd = ",".join(events)
   cmd = "sudo perf stat -e {events} --log-fd 1 -x, -p {pid}".format(events=evcmd, pid=pid)
-  log.info(cmd)
   pid, fd = pty.fork()
   if pid == 0:
     osexec(cmd)
