@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 # required: bridge_utils, qemu, lscgroup
-from collections import OrderedDict, namedtuple
-from signal import SIGINT
-from useful.typecheck import type_check
 from utils import retry, check_idleness, wait_idleness
+from collections import OrderedDict, namedtuple
+from resource import setrlimit, RLIMIT_NOFILE
+from useful.typecheck import type_check
 from subprocess import Popen, PIPE
 from termcolor import cprint
 from useful.log import Log
+from signal import SIGINT
 from virt import cgmgr
 import subprocess
 import argparse
@@ -215,15 +216,6 @@ def arbitrary_tests(instances=None, cpucfg=[1,1], num=10, benchmarks=benchmarks)
 
 
 
-def get_useful_events():
-  """select counters that are the most useful for our purposes"""
-  result =  perftool.get_events(hw=True, sw=True, tp=False)
-  tpevents = perftool.get_events(tp=True)
-  for prefix in ['kvm:', 'kvmmmu:', 'vmscan:', 'irq:']:
-    result += filter(lambda ev: ev.startswith(prefix), tpevents)
-  print(result)
-  return result
-
 def main():
   parser = argparse.ArgumentParser(description='Run experiments')
   parser.add_argument('--debug', default=False, type=bool, const=True, nargs='?', help='enable debug mode')
@@ -239,11 +231,12 @@ def main():
   # INIT
   if os.geteuid() != 0:
     sys.exit("you need root to run this scrips")
+  setrlimit(RLIMIT_NOFILE, (10240, 10240))
   topology = numa.OnlineCPUTopology()
   log.notice("topology:\n%s" % topology)
   cpu_name = numa.get_cpu_name()
   log.debug("cpu name: %s" % cpu_name)
-  events = get_useful_events()
+  events = perftool.get_useful_events()
   log.debug("useful events: %s", events)
 
   # MACHINE-SPECIFIC CONFIGURATION
@@ -324,7 +317,7 @@ def main():
       rpc = retry(rpyc.connect, args=("172.16.5.1",), kwargs={"port":6666}, retries=10)
       RPopen = rpc.root.Popen
       r = perf_single(vmpid=vmpid, RPopen=RPopen, events=events)
-      print(r)
+      print("!M", r)
 
 if __name__ == '__main__':
   main()

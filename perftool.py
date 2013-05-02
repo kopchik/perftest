@@ -15,6 +15,7 @@ NOT_COUNTED = '<not counted>'
 os.environ["PERF_PAGER"]="cat"
 log = Log("perftool")
 
+
 counters_cmd = """perf list %s --no-pager |  grep -v 'List of' | awk '{print $1}' | grep -v '^$'"""
 def get_events(hw=True, sw=True, cache=True, tp=True):
   selector = ""
@@ -26,6 +27,19 @@ def get_events(hw=True, sw=True, cache=True, tp=True):
   cmd = counters_cmd % selector
   raw = check_output(cmd, shell=True)
   return raw.decode().strip(' \n').split('\n')
+
+
+def get_useful_events():
+  """select counters that are the most useful for our purposes"""
+
+  bad = "kvmmmu:kvm_mmu_get_page,kvmmmu:kvm_mmu_sync_page,kvmmmu:kvm_mmu_unsync_page,,kvmmmu:kvm_mmu_prepare_zap_page".split(',')
+  result =  get_events(hw=True, sw=True, tp=False)
+  tpevents = get_events(tp=True)
+  for prefix in ['kvm:', 'kvmmmu:', 'vmscan:', 'irq:']:
+    result += filter(lambda ev: ev.startswith(prefix), tpevents)
+  print(result)
+  result = filter(lambda x: x not in bad, result)
+  return list(result)
 
 
 def osexec(cmd):
@@ -50,7 +64,7 @@ def stat(pid, events, t):
   time.sleep(t)
   ctrl_c = termios.tcgetattr(fd)[-1][termios.VINTR]  # get Ctrl+C character
   os.write(fd, ctrl_c)
-  os.waitpid(pid, 0)  
+  os.waitpid(pid, 0)
   raw = os.read(fd, 65535)
   return PerfData(raw)
 
@@ -64,7 +78,11 @@ class PerfData(dict):
     array = rawdata.split('\r\n')
     if array[0].startswith("#"):
       preamble = array.pop(0) #print("skipping preamble")
-    array = filter(lambda x: x, array) #filter out empty lines
+    for x in array:
+      if not x or x.find('Warning:') != -1:
+        array.remove(x)
+    #array = filter(lambda x: x, array) #filter out empty lines
+    assert 'Not all events could be opened.' not in array
     array = map(lambda x: x.split(','), array)
     for raw_value, key in array:
       if raw_value == NOT_SUPPORTED:
@@ -125,23 +143,25 @@ def pperf(perf):
 
 
 def pidof(psname, exact=False):
-  psname = psname.encode()
+  psname = psname
 
   pids = (pid for pid in os.listdir('/proc') if pid.isdigit())
   result = []
   for pid in pids:
-    name, *cmd = open(os.path.join('/proc', pid, 'cmdline'), 'rb').read().strip(b'\x00').split(b'\x00')
+    name, *cmd = open(os.path.join('/proc', pid, 'cmdline'), 'rt').read().strip('\x00').split('\x00')
     if exact:
       if name == psname:
         result += [pid]
     else:
       if name.startswith(psname):
         result += [pid]
+  if not result:
+    raise Exception("no such process: %s (exact=%s)" % (psname, exact))
   return result
 
 
 if __name__ == '__main__':
   # print("You got the following counters in your CPU:\n",
   #   get_events())
-  r = stat(pid=pidof("X"), events=get_events(), t=0.2)
+  r = stat(pid=os.getpid(), events=get_useful_events(), t=0.5)
   print(r)
