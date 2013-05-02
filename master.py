@@ -55,7 +55,7 @@ polute = "classes/build/polute"
 )
 
 
-def perf_single(vmpid, RPopen, benchmarks=benchmarks):
+def perf_single(vmpid, RPopen, benchmarks=benchmarks, events=['cycles']):
   result = {}
   for name, cmd in benchmarks.items():
     # start
@@ -65,7 +65,7 @@ def perf_single(vmpid, RPopen, benchmarks=benchmarks):
     # measurement
     log.debug("warmup sleeping")
     time.sleep(cfg.warmup)
-    stat = perftool.stat(pid=vmpid, events=['cycles'], t=cfg.measure)
+    stat = perftool.stat(pid=vmpid, events=events, t=cfg.measure)
     result[name] = stat
     print(result)
 
@@ -215,10 +215,14 @@ def arbitrary_tests(instances=None, cpucfg=[1,1], num=10, benchmarks=benchmarks)
 
 
 
-def get_actual_events():
-  """select counters that are the most actual"""
-  result =  get_events(hw=True, sw=True, tp=False)
-  print(get_events(tp=True))
+def get_useful_events():
+  """select counters that are the most useful for our purposes"""
+  result =  perftool.get_events(hw=True, sw=True, tp=False)
+  tpevents = perftool.get_events(tp=True)
+  for prefix in ['kvm:', 'kvmmmu:', 'vmscan:', 'irq:']:
+    result += filter(lambda ev: ev.startswith(prefix), tpevents)
+  print(result)
+  return result
 
 def main():
   parser = argparse.ArgumentParser(description='Run experiments')
@@ -232,7 +236,6 @@ def main():
 
   args = parser.parse_args()
 
-  sys.exit(get_actual_events())
   # INIT
   if os.geteuid() != 0:
     sys.exit("you need root to run this scrips")
@@ -240,6 +243,8 @@ def main():
   log.notice("topology:\n%s" % topology)
   cpu_name = numa.get_cpu_name()
   log.debug("cpu name: %s" % cpu_name)
+  events = get_useful_events()
+  log.debug("useful events: %s", events)
 
   # MACHINE-SPECIFIC CONFIGURATION
   hostname = socket.gethostname()
@@ -316,9 +321,9 @@ def main():
       vmpid = cgmgr.start("0")
       time.sleep(10)
       # TODO wait_idleness(7)
-      rpc = retry(rpyc.connect, args=("172.16.5.10",), kwargs={"port":6666}, retries=10)
+      rpc = retry(rpyc.connect, args=("172.16.5.1",), kwargs={"port":6666}, retries=10)
       RPopen = rpc.root.Popen
-      r = perf_single(vmpid=vmpid, RPopen=RPopen)
+      r = perf_single(vmpid=vmpid, RPopen=RPopen, events=events)
       print(r)
 
 if __name__ == '__main__':
