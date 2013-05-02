@@ -36,6 +36,7 @@ def osexec(cmd):
 def stat(pid, events, t):
   evcmd = ",".join(events)
   cmd = "sudo perf stat -e {events} --log-fd 1 -x, -p {pid}".format(events=evcmd, pid=pid)
+  print("!!", cmd)
   pid, fd = pty.fork()
   if pid == 0:
     osexec(cmd)
@@ -59,6 +60,7 @@ class PerfData(dict):
     super().__init__()
 
     rawdata = rawdata.decode()
+    print("!!", rawdata)
     array = rawdata.split('\r\n')
     if array[0].startswith("#"):
       preamble = array.pop(0) #print("skipping preamble")
@@ -122,8 +124,24 @@ def pperf(perf):
       print(key, value)
 
 
+def pidof(psname, exact=False):
+  psname = psname.encode()
+
+  pids = (pid for pid in os.listdir('/proc') if pid.isdigit())
+  result = []
+  for pid in pids:
+    name, *cmd = open(os.path.join('/proc', pid, 'cmdline'), 'rb').read().strip(b'\x00').split(b'\x00')
+    if exact:
+      if name == psname:
+        result += [pid]
+    else:
+      if name.startswith(psname):
+        result += [pid]
+  return result
+
+
 if __name__ == '__main__':
-  print("You got the following counters in your CPU:\n",
-    get_events())
-  r = stat(pid=534,events=get_events(),t=1)
+  # print("You got the following counters in your CPU:\n",
+  #   get_events())
+  r = stat(pid=pidof("X"), events=get_events(), t=0.2)
   print(r)
