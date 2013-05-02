@@ -15,13 +15,13 @@ NOT_COUNTED = '<not counted>'
 os.environ["PERF_PAGER"]="cat"
 log = Log("perftool")
 
-counters_cmd = """perf list %s --no-pager |  grep -v 'List of' | awk '{print $1}' |  grep -v '^$'"""
-def get_events(hw=True, sw=True, cache=True, tracepoint=True):
+counters_cmd = """perf list %s --no-pager |  grep -v 'List of' | awk '{print $1}' | grep -v '^$'"""
+def get_events(hw=True, sw=True, cache=True, tp=True):
   selector = ""
   if hw: selector += " hw"
   if sw: selector += " sw"
   if cache: selector += " cache"
-  if tracepoint: selector += " tracepoint"
+  if tp: selector += " tracepoint"
 
   cmd = counters_cmd % selector
   raw = check_output(cmd, shell=True)
