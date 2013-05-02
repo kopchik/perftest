@@ -19,6 +19,7 @@ import numa
 import time
 import sys
 import pdb
+import os
 
 
 info    = lambda *x: cprint(" ".join(map(str, x)), color='green')
@@ -214,6 +215,10 @@ def arbitrary_tests(instances=None, cpucfg=[1,1], num=10, benchmarks=benchmarks)
 
 
 
+def get_actual_events():
+  """select counters that are the most actual"""
+  result =  get_events(hw=True, sw=True, tp=False)
+  print(get_events(tp=True))
 
 def main():
   parser = argparse.ArgumentParser(description='Run experiments')
@@ -227,7 +232,10 @@ def main():
 
   args = parser.parse_args()
 
+  sys.exit(get_actual_events())
   # INIT
+  if os.geteuid() != 0:
+    sys.exit("you need root to run this scrips")
   topology = numa.OnlineCPUTopology()
   log.notice("topology:\n%s" % topology)
   cpu_name = numa.get_cpu_name()
