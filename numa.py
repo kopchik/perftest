@@ -16,9 +16,10 @@ def get_online_nodes():
 
 def get_cpu_name():
   cpus_raw = run("cat /proc/cpuinfo | grep 'model name' | cut -d' ' -f3-", shell=True)
-  cpus = set(cpus_raw.strip('\n').split('\n'))
+  cpus = set([item.strip() for item in cpus_raw.split('\n') if item])
   assert len(cpus) == 1, "Omg, different CPUs installed in this machine??"
   return cpus.pop()
+
 
 class PC:
   def __init__(self, lvl=0):
