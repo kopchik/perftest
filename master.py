@@ -240,7 +240,7 @@ def main():
   cpu_name = numa.get_cpu_name()
   log.debug("cpu name: %s" % cpu_name)
   events = perftool.get_useful_events()
-  log.debug("useful events: %s", events)
+  #log.debug("useful events: %s", events)
 
   # MACHINE-SPECIFIC CONFIGURATION
   hostname = socket.gethostname()
@@ -318,11 +318,11 @@ def main():
         vmpid = cgmgr.start("0")
         time.sleep(10)
         # TODO wait_idleness(7)
-        rpc = retry(rpyc.connect, args=("172.16.5.1",), kwargs={"port":6666}, retries=10)
+        rpc = retry(rpyc.connect, args=("172.16.5.10",), kwargs={"port":6666}, retries=10)
         RPopen = rpc.root.Popen
         r = perf_single(vmpid=vmpid, RPopen=RPopen, events=events)
       except Exception as err:
-        log.critical(err)
+        log.critical(err, tb=True)
         import pdb; pdb.set_trace()
 
 if __name__ == '__main__':
