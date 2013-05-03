@@ -55,7 +55,7 @@ def stat(pid, events, t):
   if pid == 0:
     osexec(cmd)
   # fcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack("hhhh", 24, 80, 0, 0)) # resise terminal
-  
+
   #disable echo
   flags = termios.tcgetattr(fd)
   flags[3] &= ~termios.ECHO

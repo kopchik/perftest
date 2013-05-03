@@ -7,7 +7,7 @@ from useful.typecheck import type_check
 from subprocess import Popen, PIPE
 from termcolor import cprint
 from useful.log import Log
-from signal import SIGINT
+from signal import signal, SIGINT, SIGCHLD, SIG_IGN
 from virt import cgmgr
 import subprocess
 import argparse
@@ -74,6 +74,7 @@ def perf_single(vmpid, RPopen, benchmarks=benchmarks, events=['cycles']):
     assert p.poll() is None, "test unexpectedly terminated"
     p.killall()
     wait_idleness(cfg.idfactor*2)
+  print("!! FINITO")
   return result
 
 
@@ -232,6 +233,8 @@ def main():
   if os.geteuid() != 0:
     sys.exit("you need root to run this scrips")
   setrlimit(RLIMIT_NOFILE, (10240, 10240))
+  #signal(SIGCHLD, SIG_IGN)
+  #signal(SIGINT,  SIG_IGN)
   topology = numa.OnlineCPUTopology()
   log.notice("topology:\n%s" % topology)
   cpu_name = numa.get_cpu_name()
@@ -311,13 +314,16 @@ def main():
   # EXPERIMENT 4: test with all counters enabled
   if 'perf_single' in args.tests:
     with cgmgr:
-      vmpid = cgmgr.start("0")
-      time.sleep(10)
-      # TODO wait_idleness(7)
-      rpc = retry(rpyc.connect, args=("172.16.5.1",), kwargs={"port":6666}, retries=10)
-      RPopen = rpc.root.Popen
-      r = perf_single(vmpid=vmpid, RPopen=RPopen, events=events)
-      print("!M", r)
+      try:
+        vmpid = cgmgr.start("0")
+        time.sleep(10)
+        # TODO wait_idleness(7)
+        rpc = retry(rpyc.connect, args=("172.16.5.1",), kwargs={"port":6666}, retries=10)
+        RPopen = rpc.root.Popen
+        r = perf_single(vmpid=vmpid, RPopen=RPopen, events=events)
+      except Exception as err:
+        log.critical(err)
+        import pdb; pdb.set_trace()
 
 if __name__ == '__main__':
   main()
