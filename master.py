@@ -221,6 +221,7 @@ def main():
   parser = argparse.ArgumentParser(description='Run experiments')
   parser.add_argument('--debug', default=False, type=bool, const=True, nargs='?', help='enable debug mode')
   parser.add_argument('-t', '--tests', default=['single', 'double', 'random', 'perf_single'], nargs='*')
+  parser.add_argument('-e', '--events', default=perftool.get_useful_events(), nargs='*')
   parser.add_argument('--no-start', type=bool, default=False,
       help="Assume that instances are already started. Images are not regenerated, \
             VMs are not killed on start.")
@@ -239,7 +240,7 @@ def main():
   log.notice("topology:\n%s" % topology)
   cpu_name = numa.get_cpu_name()
   log.debug("cpu name: %s" % cpu_name)
-  events = perftool.get_useful_events()
+  #events = perftool.get_useful_events()
   #log.debug("useful events: %s", events)
 
   # MACHINE-SPECIFIC CONFIGURATION
@@ -320,10 +321,9 @@ def main():
         # TODO wait_idleness(7)
         rpc = retry(rpyc.connect, args=("172.16.5.10",), kwargs={"port":6666}, retries=10)
         RPopen = rpc.root.Popen
-        r = perf_single(vmpid=vmpid, RPopen=RPopen, events=events)
+        r = perf_single(vmpid=vmpid, RPopen=RPopen, events=args.events)
       except Exception as err:
         log.critical(err, tb=True)
-        import pdb; pdb.set_trace()
 
 if __name__ == '__main__':
   main()
