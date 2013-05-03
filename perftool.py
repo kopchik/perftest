@@ -37,7 +37,6 @@ def get_useful_events():
   tpevents = get_events(tp=True)
   for prefix in ['kvm:', 'kvmmmu:', 'vmscan:', 'irq:']:
     result += filter(lambda ev: ev.startswith(prefix), tpevents)
-  print(result)
   result = filter(lambda x: x not in bad, result)
   return list(result)
 
@@ -50,7 +49,6 @@ def osexec(cmd):
 def stat(pid, events, t):
   evcmd = ",".join(events)
   cmd = "sudo perf stat -e {events} --log-fd 1 -x, -p {pid}".format(events=evcmd, pid=pid)
-  print("!!", cmd)
   pid, fd = pty.fork()
   if pid == 0:
     osexec(cmd)
@@ -74,7 +72,6 @@ class PerfData(dict):
     super().__init__()
 
     rawdata = rawdata.decode()
-    print("!!", rawdata)
     array = rawdata.split('\r\n')
     if array[0].startswith("#"):
       preamble = array.pop(0) #print("skipping preamble")
@@ -163,5 +160,6 @@ def pidof(psname, exact=False):
 if __name__ == '__main__':
   # print("You got the following counters in your CPU:\n",
   #   get_events())
+  print("making stats on own pid...")
   r = stat(pid=os.getpid(), events=get_useful_events(), t=0.5)
   print(r)
