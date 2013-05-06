@@ -104,21 +104,13 @@ class PerfData(OrderedDict):
       self['cpu-cycles'] = self['cycles']
     elif self.get('cpu-cycles', None):
       self['cycles'] = self['cpu-cycles']
-    #calculate instructions per cycle (inpc)
-    inpc = None
-    if self.get('cycles', None) and self.get('instructions', None):
-      cycles = self['cycles']
-      instructions = self['instructions']
-      if isinstance(cycles, int) and isinstance(instructions, int):
-        inpc = instructions / cycles
-    self['_inpc_'] = inpc
     # normalize values if requested
     if self.norm:
       assert 'cycles' in self, "norm=True needs cycles to be measured"
       cycles = self['cycles']
       for k, v in self.items():
         if isinstance(v, (int,float)):
-          self[k] = v/cycles
+            self[k] = v/cycles
 
 
   def normalized(self):
@@ -143,7 +135,7 @@ class PerfData(OrderedDict):
       result += ["ann=%s"%self.ann]
     if self.norm:
       result += ["norm=True"]
-    result += ["%s=%.4s"%(k,v) for k,v in self.items()]
+    result += ["%s=%.5s"%(k,v) for k,v in self.items()]
     return "Perf(%s)" % (", ".join(result))
 
 
