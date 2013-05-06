@@ -100,10 +100,9 @@ class PerfData(OrderedDict):
           value = int(raw_value)
       self[key] = value
     # ensure common data layout
-    if self.get('cycles', None):
-      self['cpu-cycles'] = self['cycles']
-    elif self.get('cpu-cycles', None):
+    if self.get('cpu-cycles', None):
       self['cycles'] = self['cpu-cycles']
+      del self['cpu-cycles']
     # normalize values if requested
     if self.norm:
       assert 'cycles' in self, "norm=True needs cycles to be measured"
