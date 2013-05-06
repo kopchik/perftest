@@ -91,7 +91,7 @@ def retry(f, args, kwargs, sleep=1, retries=20):
     try:
       return f(*args, **kwargs)
     except Exception as err:
-      log.debug("retry: %s" % err)
+      log.info("retry: %s" % err)
     time.sleep(sleep)
   else:
     import pdb; pdb.set_trace()

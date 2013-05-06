@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
-from libvmc import KVM, Bridged, Drive, Manager, main
+from libvmc import KVM, Bridged, Drive, Manager, main, __version__ as vmc_version
 from numa import OnlineCPUTopology
+from ipaddress import ip_address
 import cgroup
 
+
+assert vmc_version >= 8, "vmc library is too old"
 numainfo = OnlineCPUTopology()
 CPUS = numainfo.cpus
 
@@ -27,6 +30,10 @@ class CGManager(Manager):
     cg.add_pid(pid)
     return pid
 
+  def start_vm(self, name):
+    self.start(name)
+    return self.instances[name]
+
   def started(self):
     return list(filter(lambda x: x.is_running(), self.instances.values()))
 
@@ -44,6 +51,7 @@ class Template(KVM):
   mgr   = cgmgr
   name  = "template"
   mem   = 1024
+  rpc   = None  # to be filled where rpc.connect is called
   net   = [Bridged(ifname="template", model='e1000',
          mac="52:54:91:5E:38:BB", br="intbr")]
   drives = [Drive("/home/sources/perftests/arch64_template.qcow2",
@@ -55,8 +63,8 @@ template = Template()
 for i in CPUS:
   Template(
     name = str(i),
-    addr = "172.16.5.1%s" % (i+1),
-    net = [Bridged(ifname="virt%s"%i, model='e1000',
+    addr = ip_address("172.16.5.10") + (i+1),
+    net  = [Bridged(ifname="virt%s"%i, model='e1000',
            mac="52:54:91:5E:38:%02x"%i, br="intbr")],
     drives = [Drive("/home/sources/perftests/arch64_perf%s.qcow2"%i,
               cache="unsafe")])

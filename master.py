@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 # required: bridge_utils, qemu, lscgroup
 from utils import retry, check_idleness, wait_idleness
+from signal import signal, SIGINT, SIGCHLD, SIG_IGN
 from collections import OrderedDict, namedtuple
 from resource import setrlimit, RLIMIT_NOFILE
 from useful.typecheck import type_check
 from subprocess import Popen, PIPE
+from pymongo import MongoClient
 from termcolor import cprint
 from useful.log import Log
-from signal import signal, SIGINT, SIGCHLD, SIG_IGN
 from virt import cgmgr
 import subprocess
 import argparse
@@ -29,10 +30,13 @@ error   = lambda *x: cprint(" ".join(map(str, x)), color='red')
 die     = lambda m: sys.exit(m)
 log     = Log("MASTER")
 
+
 class cfg:
   warmup  = 15
   measure = 180
   idfactor= 7
+  vmstart = 10  # how much time a VM usually starts
+
 
 benchmarks = dict(
 matrix = "/home/sources/cputests/matrix.py 1024 1000",
@@ -56,8 +60,11 @@ polute = "classes/build/polute"
 )
 
 
-def perf_single(vmpid, RPopen, benchmarks=benchmarks, events=['cycles']):
+def perf_single(vm, col=None, cfg=cfg, benchmarks=benchmarks, events=['cycles']):
+  assert col, "please provide DB collection to store results into"
   result = {}
+  vmpid = vm.pid
+  RPopen = vm.rpc.root.Popen
   for name, cmd in benchmarks.items():
     # start
     log.debug("launching %s (%s)" % (name, cmd))
@@ -67,14 +74,14 @@ def perf_single(vmpid, RPopen, benchmarks=benchmarks, events=['cycles']):
     log.debug("warmup sleeping")
     time.sleep(cfg.warmup)
     stat = perftool.stat(pid=vmpid, events=events, t=cfg.measure)
-    result[name] = stat
+    col.save(stat)  #TODO: save name
     print(result)
 
     # termination
     assert p.poll() is None, "test unexpectedly terminated"
     p.killall()
     wait_idleness(cfg.idfactor*2)
-  print("!! FINITO")
+  TODO("save results")
   return result
 
 
@@ -242,6 +249,7 @@ def main():
   log.debug("cpu name: %s" % cpu_name)
   #events = perftool.get_useful_events()
   #log.debug("useful events: %s", events)
+  mongo_client = MongoClient()
 
   # MACHINE-SPECIFIC CONFIGURATION
   hostname = socket.gethostname()
@@ -313,17 +321,41 @@ def main():
       arbitrary_tests(instances=instances, cpucfg=[1 for _ in cpus_all], num=1000)
 
   # EXPERIMENT 4: test with all counters enabled
+  db = mongo_client.perf_single
+  col = db.perf_single
   if 'perf_single' in args.tests:
-    with cgmgr:
-      try:
-        vmpid = cgmgr.start("0")
-        time.sleep(10)
-        # TODO wait_idleness(7)
-        rpc = retry(rpyc.connect, args=("172.16.5.10",), kwargs={"port":6666}, retries=10)
-        RPopen = rpc.root.Popen
-        r = perf_single(vmpid=vmpid, RPopen=RPopen, events=args.events)
-      except Exception as err:
-        log.critical(err, tb=True)
+    with RPCMgr("0") as vms:
+      vm = vms["0"]
+      # TODO wait_idleness(7)
+      r = perf_single(vm=vm, cfg=cfg, col=col, events=args.events)
+
+
+  # EXPERIMENT 5: measurements stability
+  if 'perf_stab' in args.tests:
+    with RPCMgr("0") as vms:
+      vm = vms["0"]
+
+
+class RPCMgr:
+  def __init__(self, names):
+    self.names = names
+
+  def __enter__(self):
+    vms = []
+    for n in self.names:
+      vms += [cgmgr.start_vm(n)]
+    time.sleep(cfg.vmstart)
+    for i,vm in enumerate(vms):
+      rpc = retry(rpyc.connect, args=(str(vm.addr),), kwargs={"port":6666}, retries=10)
+      vm.rpc = rpc
+    return vms
+
+  def __exit__(self, t, v, tb):
+    if t:
+      log.critical("%s:%s"(t,v))
+      log.critical(tb)
+    cgmgr.graceful()
+
 
 if __name__ == '__main__':
   main()
