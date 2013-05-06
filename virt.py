@@ -63,7 +63,7 @@ template = Template()
 for i in CPUS:
   Template(
     name = str(i),
-    addr = ip_address("172.16.5.10") + (i+1),
+    addr = ip_address("172.16.5.10")+i,
     net  = [Bridged(ifname="virt%s"%i, model='e1000',
            mac="52:54:91:5E:38:%02x"%i, br="intbr")],
     drives = [Drive("/home/sources/perftests/arch64_perf%s.qcow2"%i,
