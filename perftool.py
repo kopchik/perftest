@@ -41,7 +41,17 @@ def get_useful_events():
   for prefix in ['kvm:', 'kvmmmu:', 'vmscan:', 'irq:']:
     result += filter(lambda ev: ev.startswith(prefix), tpevents)
   result = filter(lambda x: x not in bad, result)
-  return list(result)
+  result = ['cycles' if x=='cpu-cycles' else x for x in result]  # replace cpu-cycles with cycles
+
+  # filter out events that are not supported
+  p = Popen('burnP6')
+  perf_data = stat(p.pid, result, t=0.2, ann="test run")
+  p.kill()
+  for k, v in perf_data.items():
+    if v == False:
+      log.notice("event %s not supported"%k)
+      result.remove(k)
+  return result
 
 
 def osexec(cmd):
@@ -74,8 +84,7 @@ def stat(pid, events, t, ann=None, norm=False):
 class PerfData(OrderedDict):
   def __init__(self, rawdata, ann=None, norm=False):
     super().__init__()
-    self.ann  = ann   #annotation
-    self.norm = norm
+    self['ann']  = ann
 
     array = rawdata.decode().split('\r\n')
     # skipping preamble
@@ -102,47 +111,32 @@ class PerfData(OrderedDict):
     # ensure common data layout
     if self.get('cpu-cycles', None):
       self['cycles'] = self['cpu-cycles']
-      del self['cpu-cycles']
+      # del self['cpu-cycles']
     # normalize values if requested
-    if self.norm:
-      assert 'cycles' in self, "norm=True needs cycles to be measured"
-      cycles = self['cycles']
-      for k, v in self.items():
-        if isinstance(v, (int,float)):
-            self[k] = v/cycles
+    if norm:
+      self.normalize()
 
 
-  def normalized(self):
-    if self.norm:
-      return self
-    assert 'cycles' in self, "no cycles counter"
-    new_dict = OrderedDict()
+  def normalize(self):
+    assert 'cycles' in self, "norm=True needs cycles to be measured"
     cycles = self['cycles']
-    for key, value in self.items():
-      if key == '_inpc_':  # instructions-per-cycle is already normalized
-        new_dict[key] = value
-      if isinstance(value, (int,float)):
-        new_dict[key] = value/cycles
-      else:
-        new_dict[key] = value
-    return new_dict
+    if abs(cycles-1) <0.01:  # already normalized
+      return
+    for k, v in self.items():
+      if isinstance(v, (int,float)):
+          self[k] = v/cycles
+    self['normalized'] = True
 
 
   def __repr__(self):
     result = []
-    if self.ann:
-      result += ["ann=%s"%self.ann]
-    if self.norm:
-      result += ["norm=True"]
-    result += ["%s=%.5s"%(k,v) for k,v in self.items()]
+    for k,v in self.items():
+      if isinstance(v, (int,float)):
+        result += ["%s=%.5s"%(k,v)]
+      else:
+        result += ["%s=\"%s\""%(k,v)]
+    # result = ["%s=%.5s"%(k,v) for k,v in self.items() if isinstance(v,(int,float))]
     return "Perf(%s)" % (", ".join(result))
-
-
-    # inpc = self['_inpc_']
-    # if isinstance(inpc, float):
-    #   return "Perf(inpc={:.2f})".format(self['_inpc_'])
-    # else:
-    #   return super().__repr__()
 
 
 def pperf(perf):
@@ -177,5 +171,5 @@ if __name__ == '__main__':
   # print("You got the following counters in your CPU:\n",
   #   get_events())
   print("making stats on own pid...")
-  r = stat(pid=os.getpid(), events=get_useful_events(), t=0.5, norm=True)
+  r = stat(pid=os.getpid(), events=get_useful_events(), t=0.5, ann="example output", norm=False)
   print(r)

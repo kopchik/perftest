@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # required: bridge_utils, qemu, lscgroup
-from utils import retry, check_idleness, wait_idleness
+from utils import run, retry, check_idleness, wait_idleness
 from signal import signal, SIGINT, SIGCHLD, SIG_IGN
 from collections import OrderedDict, namedtuple
 from resource import setrlimit, RLIMIT_NOFILE
@@ -67,13 +67,14 @@ def perf_single(vm, col=None, cfg=cfg, benchmarks=benchmarks, events=['cycles'])
   RPopen = vm.rpc.root.Popen
   for name, cmd in benchmarks.items():
     # start
-    log.debug("launching %s (%s)" % (name, cmd))
+    log.notice("launching %s (%s)" % (name, cmd))
     p = RPopen(cmd)  # p -- benchmark pipe
     # measurement
     log.debug("warmup sleeping")
     time.sleep(cfg.warmup)
     stat = perftool.stat(pid=vmpid, events=events, t=cfg.measure, ann=name, norm=True)
     col.save(stat)
+    log.info(stat)
     # termination
     assert p.poll() is None, "test unexpectedly terminated"
     p.killall()
@@ -270,6 +271,7 @@ def main():
   # MACHINE-SPECIFIC CONFIGURATION
   hostname = socket.gethostname()
   if hostname == 'fx':
+    run("hdparm -S 0 /dev/sda", sudo="root")
     cpus_near = []
     cpu1 = topology.cpus[0]
     cpu2 = topology.ht_siblings[cpu1]
@@ -291,11 +293,12 @@ def main():
   print("cpus_near:", cpus_near, "cpus_far:", cpus_far)
 
   if args.debug:
-    log.critical("Warning! Debug enabled")
+    log.critical("Warning! Debug enabled. Using debug database")
     log.notice(args)
-    cfg.warmup  /= 10
-    cfg.measure /= 30
-    cfg.idfactor *= 100
+    cfg.warmup   = 0.5
+    cfg.measure  = 0.5
+    cfg.idfactor*= 10
+    db = mongo_client.perf_debug
 
   # PRE-FLIGHT CHECK
   if not args.no_start:
@@ -337,19 +340,32 @@ def main():
       arbitrary_tests(instances=instances, cpucfg=[1 for _ in cpus_all], num=1000)
 
   # EXPERIMENT 4: test with all counters enabled
-  db.single.drop()
-  col = db.single
   if 'perf_single' in args.tests:
+    db.single.drop()
+    col = db.single
     with RPCMgr("0") as vms:
       vm = vms["0"]
-      # TODO wait_idleness(7)
+      wait_idleness(cfg.idfactor*2)
       r = perf_single(vm=vm, cfg=cfg, col=col, events=args.events)
 
 
   # EXPERIMENT 5: measurements stability
   if 'perf_stab' in args.tests:
+    full_events = args.events
+    evsets = dict(
+      basic  = "cycles instructions".split(),
+      partial = "cycles instructions cache-references cache-misses branches branch-misses page-faults minor-faults major-faults LLC-loads LLC-load-misses LLC-stores".split()
+      full = perftool.get_useful_events(),
+    )
     with RPCMgr("0") as vms:
       vm = vms["0"]
+      wait_idleness(cfg.idfactor*2)
+      for name, evset in evsets.items():
+        for t in [1, 3, 10, 30, 90, 180, 300]: #6, 10, 15]:
+          cfg.measure = t if not args.debug else 1
+          col = db["stab_%s_%ss"%(name,t)]
+          # TODO: save setup col.save(dict(cfg=cfg, events=evset))
+          r = perf_single(vm=vm, cfg=cfg, col=col, events=evset)
 
 
 if __name__ == '__main__':
