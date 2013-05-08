@@ -33,7 +33,7 @@ log     = Log("MASTER")
 
 
 class cfg:
-  warmup  = 15
+  warmup  = 30
   measure = 180
   idfactor= 7
   vmstart = 10  # how much time a VM usually starts
@@ -266,7 +266,7 @@ def main():
   #events = perftool.get_useful_events()
   #log.debug("useful events: %s", events)
   mongo_client = MongoClient()
-  db = mongo_client.perf
+  db = mongo_client.perf2
 
   # MACHINE-SPECIFIC CONFIGURATION
   hostname = socket.gethostname()
@@ -352,16 +352,19 @@ def main():
   # EXPERIMENT 5: measurements stability
   if 'perf_stab' in args.tests:
     full_events = args.events
+    vmname = str(cpus_far[0])
     evsets = dict(
       basic  = "cycles instructions".split(),
-      partial = "cycles instructions cache-references cache-misses branches branch-misses page-faults minor-faults major-faults LLC-loads LLC-load-misses LLC-stores".split()
+      partial = "cycles instructions cache-references cache-misses branches branch-misses page-faults minor-faults major-faults LLC-loads LLC-load-misses LLC-stores".split(),
       full = perftool.get_useful_events(),
     )
-    with RPCMgr("0") as vms:
-      vm = vms["0"]
+    with RPCMgr(vmname) as vms:
+      vm = vms[vmname]
+      log.notice("running tests on VM "+ vmname)
       wait_idleness(cfg.idfactor*2)
       for name, evset in evsets.items():
         for t in [1, 3, 10, 30, 90, 180, 300]: #6, 10, 15]:
+        #for t in [ 90, 180, 300]: #, 180, 300]: #6, 10, 15]:
           cfg.measure = t if not args.debug else 1
           col = db["stab_%s_%ss"%(name,t)]
           # TODO: save setup col.save(dict(cfg=cfg, events=evset))
