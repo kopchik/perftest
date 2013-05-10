@@ -108,7 +108,10 @@ class CGroup(metaclass=TypeCheck):
     return int(self.get_value(name))
 
   def set_value(self, name: str, value: str):
-    return run("cgset -r %s=%s %s" % (name, value, self.path), sudo="root")
+    subsys = name.split('.')[0]
+    with open(prefix + '/' + subsys + self.path + '/' + name, "w") as fd:
+      fd.write(value)
+    #return run("cgset -r %s=%s %s" % (name, value, self.path), sudo="root")
 
   def set_int(self, name: str, value: int):
     return self.set_value(name, str(value))
