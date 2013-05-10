@@ -26,9 +26,10 @@ def wait_idleness(maxbusy=3, t=3):
     if not warned:
       log.notice("node is still busy more than %s" % maxbusy)
       warned = True
-    print(busy, end=' ')
+    print("%.1f"%busy, end=' ')
     sys.stdout.flush()
     time.sleep(1)
+  print()
 
 
 @type_check

@@ -60,6 +60,8 @@ int = "classes/build/int",
 polute = "classes/build/polute"
 )
 
+def selectb(*names):
+  return  {k:v for k,v in benchmarks.items() if k in names}
 
 def perf_single(vm, col=None, cfg=cfg, benchmarks=benchmarks, events=['cycles']):
   assert col, "please provide DB collection to store results into"
@@ -70,7 +72,7 @@ def perf_single(vm, col=None, cfg=cfg, benchmarks=benchmarks, events=['cycles'])
     log.notice("launching %s (%s)" % (name, cmd))
     p = RPopen(cmd)  # p -- benchmark pipe
     # measurement
-    log.debug("warmup sleeping")
+    log.notice("warmup sleeping for %s" % cfg.warmup)
     time.sleep(cfg.warmup)
     stat = perftool.stat(pid=vmpid, events=events, t=cfg.measure, ann=name, norm=True)
     col.save(stat)
@@ -245,6 +247,7 @@ def main():
   parser.add_argument('--debug', default=False, type=bool, const=True, nargs='?', help='enable debug mode')
   parser.add_argument('-t', '--tests', default=['single', 'double', 'random', 'perf_single'], nargs='*')
   parser.add_argument('-e', '--events', default=perftool.get_useful_events(), nargs='*')
+  parser.add_argument('--db', required=True, help="name of mongo database")
   parser.add_argument('--no-start', type=bool, default=False,
       help="Assume that instances are already started. Images are not regenerated, \
             VMs are not killed on start.")
@@ -266,7 +269,7 @@ def main():
   #events = perftool.get_useful_events()
   #log.debug("useful events: %s", events)
   mongo_client = MongoClient()
-  db = mongo_client.perf2
+  db = mongo_client[args.db]
 
   # MACHINE-SPECIFIC CONFIGURATION
   hostname = socket.gethostname()
@@ -298,7 +301,7 @@ def main():
     cfg.warmup   = 0.5
     cfg.measure  = 0.5
     cfg.idfactor*= 10
-    db = mongo_client.perf_debug
+    db = mongo_client[args.db+'_debug']
 
   # PRE-FLIGHT CHECK
   if not args.no_start:
@@ -362,13 +365,12 @@ def main():
       vm = vms[vmname]
       log.notice("running tests on VM "+ vmname)
       wait_idleness(cfg.idfactor*2)
-      for name, evset in evsets.items():
-        for t in [1, 3, 10, 30, 90, 180, 300]: #6, 10, 15]:
-        #for t in [ 90, 180, 300]: #, 180, 300]: #6, 10, 15]:
-          cfg.measure = t if not args.debug else 1
-          col = db["stab_%s_%ss"%(name,t)]
-          # TODO: save setup col.save(dict(cfg=cfg, events=evset))
-          r = perf_single(vm=vm, cfg=cfg, col=col, events=evset)
+      for attempt in range(3):
+        for name, evset in evsets.items():
+          for t in [1, 3, 10, 30, 90, 180, 300]:
+            cfg.measure = t if not args.debug else 1
+            col = db["stab_%s_%ss"%(name,t)]
+            r = perf_single(vm=vm, cfg=cfg, col=col, benchmarks=benchmarks, events=evset)
 
 
 if __name__ == '__main__':
