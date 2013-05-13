@@ -30,6 +30,11 @@ warning = lambda *x: cprint(" ".join(map(str, x)), color='yellow')
 error   = lambda *x: cprint(" ".join(map(str, x)), color='red')
 die     = lambda m: sys.exit(m)
 log     = Log("MASTER")
+evsets = dict(
+  basic   = "cycles instructions".split(),
+  partial = "cycles instructions cache-references cache-misses branches branch-misses page-faults minor-faults major-faults LLC-loads LLC-load-misses LLC-stores".split(),
+  full    = perftool.get_useful_events(),
+)
 
 
 class cfg:
@@ -71,9 +76,9 @@ def perf_single(vm, col=None, cfg=cfg, benchmarks=benchmarks, events=['cycles'])
     # start
     log.notice("launching %s (%s)" % (name, cmd))
     p = RPopen(cmd)  # p -- benchmark pipe
-    # measurement
     log.notice("warmup sleeping for %s" % cfg.warmup)
     time.sleep(cfg.warmup)
+    # measurement
     stat = perftool.stat(pid=vmpid, events=events, t=cfg.measure, ann=name, norm=True)
     col.save(stat)
     log.info(stat)
@@ -83,33 +88,32 @@ def perf_single(vm, col=None, cfg=cfg, benchmarks=benchmarks, events=['cycles'])
     wait_idleness(cfg.idfactor*2)
 
 
-def measure_single(cg, Popen, benchmarks=benchmarks):
-  info("measuring performance of single tasks")
-  global warmup
-  global measure
+def myperf_single(vm, col=None, cfg=cfg, benchmarks=benchmarks):
+  assert col, "please provide DB collection to store results into"
+  vmpid = vm.pid
+  RPopen = vm.rpc.root.Popen
+  cg = vm.cg
+  for name, cmd in benchmarks.items():
+    # start
+    log.notice("launching %s (%s)" % (name, cmd))
+    p = RPopen(cmd)  # p -- benchmark pipe
+    log.notice("warmup sleeping for %s" % cfg.warmup)
+    time.sleep(cfg.warmup)
 
-  single_ipc = OrderedDict()
-  for b in benchmarks:
-    print("starting", b)
-    p = Popen(benchmarks[b])
-    time.sleep(warmup)  # warm-up
+    # measurement
     cg.enable_ipc()
     cg.get_ipc(reset=True)
-
-    #MEASUREMENT
-    time.sleep(measure)
+    log.notice("measuring for %s" % cfg.measure)
+    time.sleep(cfg.measure)
     ipc = cg.get_ipc()
-    single_ipc[b] = ipc
-    print(single_ipc)
-
-    # TEST TERMINATION
+    stat = {"instructions", ipc}
     cg.disable_ipc()
+    col.save(stat)
+    log.info(stat)
+    # termination
     assert p.poll() is None, "test unexpectedly terminated"
     p.killall()
-    # wait till the test is terminated completely
     wait_idleness(cfg.idfactor*2)
-  print("the resulting IPC is:\n", single_ipc)
-  return single_ipc
 
 
 def measure_double(cg1, cg2, Popen1, Popen2, benchmarks=benchmarks):
@@ -356,11 +360,6 @@ def main():
   if 'perf_stab' in args.tests:
     full_events = args.events
     vmname = str(cpus_far[0])
-    evsets = dict(
-      basic   = "cycles instructions".split(),
-      partial = "cycles instructions cache-references cache-misses branches branch-misses page-faults minor-faults major-faults LLC-loads LLC-load-misses LLC-stores".split(),
-      full    = perftool.get_useful_events(),
-    )
     with RPCMgr(vmname) as vms:
       vm = vms[vmname]
       log.notice("running tests on VM "+ vmname)
@@ -370,7 +369,7 @@ def main():
           for t in [1, 3, 10, 30, 90, 180, 300]:
             cfg.measure = t if not args.debug else 1
             col = db["stab_%s_%ss"%(name,t)]
-            r = perf_single(vm=vm, cfg=cfg, col=col, benchmarks=benchmarks, events=evset)
+            r = myperf_single(vm=vm, cfg=cfg, col=col, benchmarks=benchmarks, events=evset)
 
 
 if __name__ == '__main__':

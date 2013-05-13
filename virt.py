@@ -25,9 +25,11 @@ class CGManager(Manager):
     self.cgroups["template"] = self.cgroups["0"]  # for template machine
 
   def start(self, name):
-    cg   = self.cgroups[name]
+    cg  = self.cgroups[name]
     pid = super().start(name)
+    vm  = self.instances[name]
     cg.add_pid(pid)
+    vm.cg = cg
     return pid
 
   def start_vm(self, name):
@@ -52,6 +54,7 @@ class Template(KVM):
   name  = "template"
   mem   = 1024
   rpc   = None  # to be filled where rpc.connect is called
+  cg    = None  # to be filled by mgr
   net   = [Bridged(ifname="template", model='e1000',
          mac="52:54:91:5E:38:BB", br="intbr")]
   drives = [Drive("/home/sources/perftests/arch64_template.qcow2",
