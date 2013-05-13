@@ -107,7 +107,7 @@ def myperf_single(vm, col=None, cfg=cfg, benchmarks=benchmarks):
     log.notice("measuring for %s" % cfg.measure)
     time.sleep(cfg.measure)
     ipc = cg.get_ipc()
-    stat = {"instructions": ipc}
+    stat = {"instructions": ipc, "name":name}
     log.info(stat)
     col.save(stat)
     cg.disable_ipc()
