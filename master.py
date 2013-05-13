@@ -23,6 +23,7 @@ import time
 import sys
 import pdb
 import os
+import gc
 
 
 info    = lambda *x: cprint(" ".join(map(str, x)), color='green')
@@ -106,10 +107,10 @@ def myperf_single(vm, col=None, cfg=cfg, benchmarks=benchmarks):
     log.notice("measuring for %s" % cfg.measure)
     time.sleep(cfg.measure)
     ipc = cg.get_ipc()
-    stat = {"instructions", ipc}
-    cg.disable_ipc()
-    col.save(stat)
+    stat = {"instructions": ipc}
     log.info(stat)
+    col.save(stat)
+    cg.disable_ipc()
     # termination
     assert p.poll() is None, "test unexpectedly terminated"
     p.killall()
@@ -274,6 +275,7 @@ def main():
   #log.debug("useful events: %s", events)
   mongo_client = MongoClient()
   db = mongo_client[args.db]
+  gc.disable()
 
   # MACHINE-SPECIFIC CONFIGURATION
   hostname = socket.gethostname()
@@ -369,8 +371,22 @@ def main():
           for t in [1, 3, 10, 30, 90, 180, 300]:
             cfg.measure = t if not args.debug else 1
             col = db["stab_%s_%ss"%(name,t)]
-            r = myperf_single(vm=vm, cfg=cfg, col=col, benchmarks=benchmarks, events=evset)
+            r = perf_single(vm=vm, cfg=cfg, col=col, benchmarks=benchmarks, events=evset)
 
+  # EXPERIMENT 5: measurements stability
+  if 'myperf_stab' in args.tests:
+    vmname = str(cpus_far[0])
+    with RPCMgr(vmname) as vms:
+      vm = vms[vmname]
+      log.notice("running tests on VM "+ vmname)
+      wait_idleness(cfg.idfactor*2)
+      for attempt in range(3):
+          for t in [1, 3, 10, 30, 90, 180, 300]:
+            log.error("gc-collected %s elemets" % gc.collect())
+            cfg.measure = t if not args.debug else 1
+            col = db["stab_%ss"%t]
+            r = myperf_single(vm=vm, cfg=cfg, col=col, benchmarks=benchmarks)
+  input("press any key to continue")
 
 if __name__ == '__main__':
   main()
