@@ -4,15 +4,16 @@ from collections import defaultdict
 from pymongo import MongoClient
 import argparse
 
-if __name__ == '__main__':
+def main():
   parser = argparse.ArgumentParser(description='Run experiments')
-  parser.add_argument('--db', required=True, help="name of mongo database")
-  parser.add_argument('--list', const=True, nargs='?', help="list available databases")
+  group = parser.add_mutually_exclusive_group(required=True)
+  group.add_argument('--db', help="name of mongo database")
+  group.add_argument('--list', const=True, action='store_const', help="list available databases")
   args = parser.parse_args()
 
   mongo_client = MongoClient()
   if args.list:
-    print(mongo_client.database_names())
+    return print(mongo_client.database_names())
 
   db = mongo_client[args.db]
 
@@ -34,3 +35,7 @@ if __name__ == '__main__':
         print(r['ann'])
         for k,v in [('instructions', r['instructions'])]: #r.items():
           print(k, ["{:.3f}".format(v) for v in v if isinstance(v, (int,float))])
+
+
+if __name__ == '__main__':
+  main()

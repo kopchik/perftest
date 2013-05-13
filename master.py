@@ -244,7 +244,7 @@ class RPCMgr:
 
 def main():
   parser = argparse.ArgumentParser(description='Run experiments')
-  parser.add_argument('--debug', default=False, type=bool, const=True, nargs='?', help='enable debug mode')
+  parser.add_argument('--debug', default=False, const=True, action='store_const', help='enable debug mode')
   parser.add_argument('-t', '--tests', default=['single', 'double', 'random', 'perf_single'], nargs='*')
   parser.add_argument('-e', '--events', default=perftool.get_useful_events(), nargs='*')
   parser.add_argument('--db', required=True, help="name of mongo database")
@@ -357,9 +357,9 @@ def main():
     full_events = args.events
     vmname = str(cpus_far[0])
     evsets = dict(
-      basic  = "cycles instructions".split(),
+      basic   = "cycles instructions".split(),
       partial = "cycles instructions cache-references cache-misses branches branch-misses page-faults minor-faults major-faults LLC-loads LLC-load-misses LLC-stores".split(),
-      full = perftool.get_useful_events(),
+      full    = perftool.get_useful_events(),
     )
     with RPCMgr(vmname) as vms:
       vm = vms[vmname]

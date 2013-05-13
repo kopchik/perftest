@@ -97,7 +97,13 @@ class PerfData(OrderedDict):
     assert 'Not all events could be opened.' not in array
     # convert raw values to int or float
     array = map(lambda x: x.split(','), array)
-    for raw_value, key in array:
+    for entry in array:
+      try:
+        raw_value, key = entry
+      except ValueError as err:
+        log.critical("exception: %s" % err)
+        log.critical("entry was: %s" % entry)
+        continue
       if raw_value == NOT_SUPPORTED:
         value = False
       elif raw_value == NOT_COUNTED:
