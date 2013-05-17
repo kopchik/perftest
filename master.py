@@ -360,7 +360,6 @@ def main():
 
   # EXPERIMENT 5: measurements stability
   if 'perf_stab' in args.tests:
-    full_events = args.events
     vmname = str(cpus_far[0])
     with RPCMgr(vmname) as vms:
       vm = vms[vmname]
@@ -381,13 +380,14 @@ def main():
       log.notice("running tests on VM "+ vmname)
       wait_idleness(cfg.idfactor*2)
       for attempt in range(3):
-          # for t in [1, 3, 10, 30, 90, 180, 300]:
-          for t in [90]:
+          for t in [1, 3, 10, 30, 90, 180, 300]:
+          # for t in [90]:
             log.error("gc-collected %s elemets" % gc.collect())
             cfg.measure = t if not args.debug else 1
             col = db["stab_%ss"%t]
             r = myperf_single(vm=vm, cfg=cfg, col=col, benchmarks=benchmarks)
   input("press any key to continue")
+
 
 if __name__ == '__main__':
   main()
