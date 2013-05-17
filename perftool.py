@@ -59,9 +59,13 @@ def osexec(cmd):
   os.execlp(cmd[0], *cmd)
 
 
-def stat(pid, events, t, ann=None, norm=False):
+def stat(pid, events, t, ann=None, norm=False, guest=True):
   evcmd = ",".join(events)
-  cmd = "sudo perf stat -e {events} --log-fd 1 -x, -p {pid}".format(events=evcmd, pid=pid)
+  if guest:
+    cmd = "sudo perf kvm stat"
+  else:
+    cmd = "sudo perf stat"
+  cmd += "-e {events} --log-fd 1 -x, -p {pid}".format(events=evcmd, pid=pid)
   pid, fd = pty.fork()
   if pid == 0:
     osexec(cmd)
@@ -100,6 +104,9 @@ class PerfData(OrderedDict):
     for entry in array:
       try:
         raw_value, key = entry
+        if key.endswith(':G'):
+          # 'G' stands for guest
+          key, _ = key.cplit(':G')
       except ValueError as err:
         log.critical("exception: %s" % err)
         log.critical("entry was: %s" % entry)

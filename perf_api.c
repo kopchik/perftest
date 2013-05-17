@@ -49,6 +49,9 @@ typedef struct CGArray {
   CGEvents *events[MAXNUM];
 } CGArray;
 
+void cga_reset(CGArray *cga);
+void cgev_reset(CGEvents *events);
+
 int sys_perf_event_open(struct perf_event_attr *attr,
               pid_t pid, int cpu, int group_fd,
               unsigned long flags) {
@@ -143,7 +146,7 @@ CGEvents *cgev_create(char *path, char *_evsel, int cpu) {
   //memcpy(events->fds, fds, sizeof(int)*nr);
 
   events->result_size = sizeof(CGEvents) - offsetof(CGEvents, result);
-
+  cgev_reset(events);
   return events;
 
   PERF_OPEN_ERR:
@@ -209,6 +212,7 @@ CGArray *cga_create(char *path, char *evsel, char *_cpusel) {
   }
   free(cpusel);
 
+  cga_reset(cga);
   return cga;
 }
 

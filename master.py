@@ -290,7 +290,7 @@ def main():
     cpus_all = topology.cpus
   elif hostname == 'ux32vd':
     cpus_near = topology.cpus_no_ht
-    cpus_far = None
+    cpus_far = topology.cpus_no_ht
     cpus_all = topology.cpus_no_ht
     cfg.idfactor = 3
   elif hostname == 'p1':
@@ -381,7 +381,8 @@ def main():
       log.notice("running tests on VM "+ vmname)
       wait_idleness(cfg.idfactor*2)
       for attempt in range(3):
-          for t in [1, 3, 10, 30, 90, 180, 300]:
+          # for t in [1, 3, 10, 30, 90, 180, 300]:
+          for t in [90]:
             log.error("gc-collected %s elemets" % gc.collect())
             cfg.measure = t if not args.debug else 1
             col = db["stab_%ss"%t]
