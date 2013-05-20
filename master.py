@@ -42,7 +42,7 @@ class cfg:
   warmup  = 30
   measure = 180
   idfactor= 7
-  vmstart = 10  # how much time a VM usually starts
+  vmstart = 5  # how much time a VM usually starts
 
 
 benchmarks = dict(
@@ -288,6 +288,7 @@ def main():
     del cpu1, cpu2
     cpus_far = topology.cpus_no_ht[:2]
     cpus_all = topology.cpus
+    #cfg.idfactor = 10
   elif hostname == 'ux32vd':
     cpus_near = topology.cpus_no_ht
     cpus_far = topology.cpus_no_ht
@@ -368,13 +369,13 @@ def main():
       for attempt in range(3):
         for name, evset in evsets.items():
           for t in [1, 3, 10, 30, 90, 180, 300]:
-          # for t in [30]:
+          #for t in [30]:
             cfg.measure = t if not args.debug else 1
             col = db["stab_%s_%ss"%(name,t)]
             r = perf_single(vm=vm, cfg=cfg, col=col, benchmarks=benchmarks, events=evset)
 
 
-  # EXPERIMENT 5: measurements stability
+  # EXPERIMENT 6: measurements stability
   if 'myperf_stab' in args.tests:
     vmname = str(cpus_far[0])
     with RPCMgr(vmname) as vms:
