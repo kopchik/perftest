@@ -71,7 +71,7 @@ def stat(pid, events, t, ann=None, norm=False, guest=False):
     osexec(cmd)
   # fcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack("hhhh", 24, 80, 0, 0)) # resise terminal
 
-  #disable echo
+  # disable echo
   flags = termios.tcgetattr(fd)
   flags[3] &= ~termios.ECHO
   termios.tcsetattr(fd, termios.TCSADRAIN, flags)
@@ -86,7 +86,7 @@ def stat(pid, events, t, ann=None, norm=False, guest=False):
 
 
 def kvmstat(*args, **kwargs):
-  return _stat(*args, guest=True, **kwargs)
+  return stat(*args, guest=True, **kwargs)
 
 
 class PerfData(OrderedDict):
@@ -109,8 +109,7 @@ class PerfData(OrderedDict):
     for entry in array:
       try:
         raw_value, key = entry
-        if key.endswith(':G'):
-          # 'G' stands for guest
+        if key.endswith(':G'):  # 'G' stands for guest
           key, _ = key.cplit(':G')
       except ValueError as err:
         log.critical("exception: %s" % err)
@@ -190,4 +189,5 @@ if __name__ == '__main__':
   #   get_events())
   print("making stats on own pid...")
   r = stat(pid=os.getpid(), events=get_useful_events(), t=0.5, ann="example output", norm=False)
+  #r = kvmstat(pid=3839, events=['instructions', 'cycles'], t=0.5, ann="example output", norm=True)
   print(r)
