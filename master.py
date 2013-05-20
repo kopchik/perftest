@@ -80,7 +80,7 @@ def perf_single(vm, col=None, cfg=cfg, benchmarks=benchmarks, events=['cycles'])
     log.notice("warmup sleeping for %s" % cfg.warmup)
     time.sleep(cfg.warmup)
     # measurement
-    stat = perftool.stat(pid=vmpid, events=events, t=cfg.measure, ann=name, norm=True)
+    stat = perftool.kvmstat(pid=vmpid, events=events, t=cfg.measure, ann=name, norm=True)
     col.save(stat)
     log.info(stat)
     # termination
@@ -368,9 +368,11 @@ def main():
       for attempt in range(3):
         for name, evset in evsets.items():
           for t in [1, 3, 10, 30, 90, 180, 300]:
+          # for t in [30]:
             cfg.measure = t if not args.debug else 1
             col = db["stab_%s_%ss"%(name,t)]
             r = perf_single(vm=vm, cfg=cfg, col=col, benchmarks=benchmarks, events=evset)
+
 
   # EXPERIMENT 5: measurements stability
   if 'myperf_stab' in args.tests:
