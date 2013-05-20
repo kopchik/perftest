@@ -59,7 +59,7 @@ def osexec(cmd):
   os.execlp(cmd[0], *cmd)
 
 
-def _stat(pid, events, t, ann=None, norm=False, guest=False):
+def stat(pid, events, t, ann=None, norm=False, guest=False):
   evcmd = ",".join(events)
   if guest:
     cmd = "sudo perf kvm stat"
@@ -83,10 +83,6 @@ def _stat(pid, events, t, ann=None, norm=False, guest=False):
   raw = os.read(fd, BUF_SIZE)
   assert len(raw) < BUF_SIZE, "buffer full on read"
   return PerfData(raw, ann=ann, norm=norm)
-
-
-def stat(*args, **kwargs):
-  return _stat(*args, **kwargs)
 
 
 def kvmstat(*args, **kwargs):
