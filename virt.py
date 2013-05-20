@@ -52,7 +52,7 @@ cgmgr = CGManager(CPUS)
 class Template(KVM):
   mgr   = cgmgr
   #cmd   = "qemu-kvm -curses"
-  cmd   = "qemu-system-x86_64 -curses"
+  cmd   = "qemu-system-x86_64 -enable-kvm -curses"
   #cmd   = "/home/sources/aur-mirror/kvm-git/src/qemu-kvm/x86_64-softmmu/qemu-system-x86_64 -curses"
   #cmd   = "/home/sources/qemu-new/x86_64-softmmu/qemu-system-x86_64 -curses"
   name  = "template"
