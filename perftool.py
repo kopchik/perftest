@@ -65,7 +65,7 @@ def stat(pid, events, t, ann=None, norm=False, guest=True):
     cmd = "sudo perf kvm stat"
   else:
     cmd = "sudo perf stat"
-  cmd += "-e {events} --log-fd 1 -x, -p {pid}".format(events=evcmd, pid=pid)
+  cmd += " -e {events} --log-fd 1 -x, -p {pid}".format(events=evcmd, pid=pid)
   pid, fd = pty.fork()
   if pid == 0:
     osexec(cmd)
@@ -87,6 +87,7 @@ def stat(pid, events, t, ann=None, norm=False, guest=True):
 
 class PerfData(OrderedDict):
   def __init__(self, rawdata, ann=None, norm=False):
+    log.notice("raw data:\n %s" % rawdata)
     super().__init__()
     self['ann']  = ann
 
