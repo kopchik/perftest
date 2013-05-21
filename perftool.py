@@ -3,6 +3,7 @@
 from collections import OrderedDict
 from useful.log import Log
 from subprocess import *
+import argparse
 import termios
 import struct
 import fcntl
@@ -185,9 +186,19 @@ def pidof(psname, exact=False):
 
 
 if __name__ == '__main__':
-  # print("You got the following counters in your CPU:\n",
-  #   get_events())
-  print("making stats on own pid...")
-  r = stat(pid=os.getpid(), events=get_useful_events(), t=0.5, ann="example output", norm=False)
-  #r = kvmstat(pid=3839, events=['instructions', 'cycles'], t=0.5, ann="example output", norm=True)
+  parser = argparse.ArgumentParser(description='Run experiments')
+  parser.add_argument('-t', '--time', type=float, default=10, help="measurement time")
+  parser.add_argument('--debug', default=False, const=True, action='store_const', help='enable debug mode')
+  group = parser.add_mutually_exclusive_group(required=True)
+  group.add_argument('--kvmpid', type=int, help="pid of qemu process")
+  group.add_argument('--pid', type=int, help="pid of normal process")
+  args = parser.parse_args()
+  print(args)
+
+  stat_args = dict(pid=args.pid if args.pid else args.kvmpid, t=args.time, ann="example output", norm=True)
+  if args.kvmpid:
+    r = kvmstat(events=['instructions', 'cycles'], **stat_args)
+  else:
+    r = stat(events=['instructions', 'cycles'], **stat_args)
+
   print(r)
