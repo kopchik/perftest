@@ -1,0 +1,25 @@
+import waflib.Configure
+waflib.Configure.autoconfig = True
+import glob
+
+def options(opt):
+  opt.load('compiler_c')
+
+
+def configure(conf):
+  conf.env["CC"] = ["clang"]
+  conf.load('compiler_c')
+  conf.env.CFLAGS = ['-ggdb', '-std=gnu99']
+  if 0:
+    conf.env.CFLAGS += ['-fmudflap']
+    conf.env.LINKFLAGS = ['-lmudflap']
+    conf.env.SHLIB_MARKER = '-Wl,-e,main'
+
+
+def build(bld):
+  print("building classes")
+  srcs = glob.glob("*c")
+  for src in srcs:
+    print(src)
+    tgt = src.split(".")[0]
+    bld.program(source=src, target=tgt)
