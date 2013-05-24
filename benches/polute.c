@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
 
   if (argc != 2) {
     errx(2, "please specify dsize=%%d,osize=%%d,mode=%%s"); }
-  if ((r=sscanf(argv[1], "dsize=%d,osize=%d,mode=%s,cycles=%d\n", &dsize, &osize, mode, &cycles)) != 4) {
+  if ((r=sscanf(argv[1], "dsize=%d,osize=%d,cycles=%d,mode=%s", &dsize, &osize, &cycles, mode)) != 4) {
     errx(4, "wrong parameters: read only %d chars", r); }
 
 
