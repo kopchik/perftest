@@ -9,6 +9,23 @@ import gc
 BUFSIZE = 65535
 basicConfig(level=DEBUG)
 
+
+benchmarks = dict(
+matrix = "/home/sources/kvmtests/benches/matrix.py -s 1024 -r 1",
+# pgbench = "sudo -u postgres pgbench -c 20 -s 10 -T 100000",
+# nginx_static = "siege -c 100 -t 666h http://localhost/big_static_file",  # TODO: too CPU consuming,
+# wordpress = "siege -c 100 -t 666h http://localhost/",
+# TODO: 1s
+ffmpeg = "ffmpeg -i /home/sources/hd_thx_amazing_life.m2ts \
+            -threads 1 -t 1 -y -strict -2 -loglevel panic \
+            -acodec aac -aq 100 \
+            -vcodec libx264 -preset fast -crf 22 \
+            -f mp4 /dev/null",
+sdag  = "/home/sources/test_SDAG/test_sdag -t 5 -q 1000 /home/sources/test_SDAG/dataset.dat",
+sdagp = "/home/sources/test_SDAG/test_sdag+ -t 5 -q 1000 /home/sources/test_SDAG/dataset.dat",
+blosc = "/home/sources/kvmtests/benches/blosc_test.py",
+)
+
 def parse(raw):
   d = OrderedDict()
   for l in raw.decode().splitlines():
@@ -36,7 +53,8 @@ def bench(cmd, cpu=None, evs=None, repeats=1):
 
 def main():
   gc.disable()
-  print(bench("sleep 0.1", evs="cycles", cpu=0))
+  for n, c in benchmarks.items():
+    print(bench(c, evs="cycles", cpu=0))
 
 
 if __name__ == '__main__':
