@@ -23,7 +23,7 @@ ffmpeg = "ffmpeg -i /home/sources/hd_thx_amazing_life.m2ts \
             -f mp4 /dev/null",
 sdag  = "/home/sources/test_SDAG/test_sdag -t 5 -q 1000 /home/sources/test_SDAG/dataset.dat",
 sdagp = "/home/sources/test_SDAG/test_sdag+ -t 5 -q 1000 /home/sources/test_SDAG/dataset.dat",
-blosc = "/home/sources/kvmtests/benches/blosc_test.py",
+blosc = "/home/sources/kvmtests/benches/pyblosc.py -r 100",
 )
 
 def parse(raw):
