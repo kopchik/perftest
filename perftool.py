@@ -3,6 +3,7 @@
 from collections import OrderedDict
 from useful.log import Log
 from subprocess import *
+from signal import SIGTERM
 import argparse
 import termios
 import struct
@@ -36,7 +37,7 @@ def get_events(hw=True, sw=True, cache=True, tp=True):
 def get_useful_events():
   """select counters that are the most useful for our purposes"""
 
-  bad = "kvmmmu:kvm_mmu_get_page,kvmmmu:kvm_mmu_sync_page,kvmmmu:kvm_mmu_unsync_page,,kvmmmu:kvm_mmu_prepare_zap_page".split(',')
+  bad = "kvmmmu:kvm_mmu_get_page,kvmmmu:kvm_mmu_sync_page,kvmmmu:kvm_mmu_unsync_page,kvmmmu:kvm_mmu_prepare_zap_page".split(',')
   result =  get_events(hw=True, sw=True, tp=False)
   tpevents = get_events(tp=True)
   for prefix in ['kvm:', 'kvmmmu:', 'vmscan:', 'irq:']:
@@ -45,12 +46,15 @@ def get_useful_events():
   result = ['cycles' if x=='cpu-cycles' else x for x in result]  # replace cpu-cycles with cycles
 
   # filter out events that are not supported
-  p = Popen('burnP6')
-  perf_data = stat(p.pid, result, t=0.2, ann="test run")
-  p.kill()
+  p = Popen(shlex.split('bzip2 -k /dev/urandom -c'), stdout=DEVNULL)
+  perf_data = stat(p.pid, result, t=1, ann="test run")
+  p.send_signal(SIGTERM)
   for k, v in perf_data.items():
     if v == False:
       log.notice("event %s not supported"%k)
+      result.remove(k)
+    elif v == None:
+      log.notice("event %s not counted"%k)
       result.remove(k)
   return result
 
@@ -81,8 +85,16 @@ def stat(pid, events, t, ann=None, norm=False, guest=False):
   ctrl_c = termios.tcgetattr(fd)[-1][termios.VINTR]  # get Ctrl+C character
   os.write(fd, ctrl_c)
   os.waitpid(pid, 0)
-  raw = os.read(fd, BUF_SIZE)
-  assert len(raw) < BUF_SIZE, "buffer full on read"
+  raw = b""
+  while True:
+    try:
+      chunk = os.read(fd, BUF_SIZE)
+    except OSError:
+      break
+    print(len(chunk))
+    if not chunk:
+      break
+    raw += chunk
   return PerfData(raw, ann=ann, norm=norm)
 
 
@@ -92,7 +104,7 @@ def kvmstat(*args, **kwargs):
 
 class PerfData(OrderedDict):
   def __init__(self, rawdata, ann=None, norm=False):
-    log.notice("raw data:\n %s" % rawdata)
+    log.notice("raw data:\n %s" % rawdata.decode())
     super().__init__()
     self['ann']  = ann
 
