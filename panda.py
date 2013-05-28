@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
-from subprocess import Popen, PIPE
-from socket import socketpair
-from collections import OrderedDict
+from subprocess import Popen, PIPE, DEVNULL
 from logging import basicConfig, DEBUG
+from perftool import get_useful_events
+from collections import OrderedDict
+from useful.bench import StopWatch
+from socket import socketpair
 import shlex
+import time
 import gc
+
 
 BUFSIZE = 65535
 basicConfig(level=DEBUG)
@@ -29,7 +33,7 @@ blosc = "/home/sources/kvmtests/benches/pyblosc.py -r 100",
 def parse(raw):
   d = OrderedDict()
   for l in raw.decode().splitlines():
-    v,k = l.split(',')
+    v,k,*p = l.split(',')
     d[k] = v
   return d
 
@@ -41,7 +45,7 @@ def bench(cmd, cpu=None, evs=None, repeats=1):
   cmd = "schedtool -a {cpu} -e perf stat -e {evs} -x, --log-fd {fd} -r {repeats} -- {cmd}" \
       .format(cpu=cpu, evs=evs, repeats=repeats, fd=other.fileno(), cmd=cmd)
   print(cmd)
-  p = Popen(shlex.split(cmd), stderr=PIPE, pass_fds=[other.fileno()])
+  p = Popen(shlex.split(cmd), stdout=DEVNULL, stderr=DEVNULL, pass_fds=[other.fileno()])
   
   r = p.wait()
   assert r == 0, "bad return code %s" % r
@@ -53,8 +57,13 @@ def bench(cmd, cpu=None, evs=None, repeats=1):
 
 def main():
   gc.disable()
+  # perf single
+  out = open("raw_results", "a")
+  print(time.ctime(), file=out)
   for n, c in benchmarks.items():
-    print(bench(c, evs="cycles", cpu=0))
+    with StopWatch() as t:
+      print(bench(c, evs="cycles,instructions", cpu=0, repeats=1))
+    print(n, t.time, file=out)
 
 
 if __name__ == '__main__':
