@@ -5,9 +5,11 @@ from perftool import get_useful_events
 from collections import OrderedDict
 from useful.bench import StopWatch
 from socket import socketpair
+from signal import SIGKILL
 import shlex
 import time
 import gc
+import os
 
 
 BUFSIZE = 65535
@@ -58,13 +60,27 @@ def bench(cmd, cpu=None, evs=None, repeats=1):
 def main():
   gc.disable()
   # perf single
-  out = open("raw_results", "a")
-  print(time.ctime(), file=out)
-  for n, c in benchmarks.items():
-    with StopWatch() as t:
-      print(bench(c, evs="cycles,instructions", cpu=0, repeats=1))
-    print(n, t.time, file=out)
+  #out = open("raw_results", "a")
+  #print(time.ctime(), file=out)
+  #for n, c in benchmarks.items():
+  #  with StopWatch() as t:
+  #    print(bench(c, evs="cycles,instructions", cpu=0, repeats=3))
+  #  print(n, t.time, file=out)
 
+  # perf double
+  out = open("raw_results_with_bg", "a")
+  print(time.ctime(), file=out)
+  for bn, bc in benchmarks.items():
+    bcmd = "schedtool -a 1 -e %s" % bc
+    print("launching in BG:", bcmd)
+    print("launching in BG:", bn, file=out)
+    bp = Popen(shlex.split(bcmd), stdout=DEVNULL, stderr=DEVNULL, preexec_fn=os.setsid)
+    for n, c in benchmarks.items():
+      with StopWatch() as t:
+        print(bench(c, evs="cycles,instructions", cpu=0, repeats=3))
+      print(n, t.time, file=out)
+    os.killpg(bp.pid, SIGKILL)
+    bp.wait()
 
 if __name__ == '__main__':
   main()
