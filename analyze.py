@@ -9,6 +9,7 @@ def main():
   group = parser.add_mutually_exclusive_group(required=True)
   group.add_argument('--db', help="name of mongo database")
   group.add_argument('--list', const=True, action='store_const', help="list available databases")
+  parser.add_argument('-c', '--col')
   args = parser.parse_args()
 
   mongo_client = MongoClient()
@@ -36,7 +37,7 @@ def main():
 
       for k,r in benches.items():
         print( r['ann'] if 'ann' in r else r['name'])
-        for k,v in [('instructions', r['instructions'])]: #r.items():
+        for k,v in r.items():#[('instructions', r['instructions'])]: #r.items():
           print(k, ["{:.3f}".format(v) for v in v if isinstance(v, (int,float))])
 
 
