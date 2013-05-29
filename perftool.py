@@ -2,8 +2,9 @@
 
 from collections import OrderedDict
 from useful.log import Log
-from subprocess import *
 from signal import SIGTERM
+from pprint import pprint
+from subprocess import *
 import argparse
 import termios
 import struct
@@ -215,10 +216,10 @@ if __name__ == '__main__':
 
   stat_args = dict(pid=args.pid if args.pid else args.kvmpid, t=args.time, ann="example output", norm=True)
   if args.kvmpid:
-    r = kvmstat(events=['instructions', 'cycles'], **stat_args)
+    r = kvmstat(events=get_useful_events(), **stat_args)
   elif args.pid:
-    r = stat(events=['instructions', 'cycles'], **stat_args)
+     r = stat(events=get_useful_events(), **stat_args)
   else:
     r = get_useful_events()
 
-  print(r)
+  pprint(r)
