@@ -92,9 +92,9 @@ def main():
   #events = "cycles,instructions,task-clock"
   events = get_useful_events()
 
-  out = open("raw_results_single", "a")
+  out = open("results/raw_results_single", "a")
   perf_single(benchmarks, out=out, evs=events)
-  out = open("raw_results_double", "a")
+  out = open("results/raw_results_double", "a")
   perf_double(benchmarks, out=out, evs=events)
 
   # perf double
