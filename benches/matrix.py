@@ -20,5 +20,5 @@ B=np.random.randn(args.size, args.size)
 for y in range(args.repeat):
     with StopWatch() as t:
       np.dot(A, B)
-    print("Matrices {0}x{0}: real: {1:.2f} cpu: {2:.2f}".format(args.size, t.time, t.cpu))
+    print("{n} Matrices {0}x{0}: real: {1:.2f} cpu: {2:.2f}".format(args.size, t.time, t.cpu, n=y))
     #avg.append(result)
