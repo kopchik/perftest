@@ -38,25 +38,30 @@ def get_useful_events():
   """select counters that are the most useful for our purposes"""
 
   bad = "kvmmmu:kvm_mmu_get_page,kvmmmu:kvm_mmu_sync_page,kvmmmu:kvm_mmu_unsync_page,kvmmmu:kvm_mmu_prepare_zap_page".split(',')
-  result =  get_events(hw=True, sw=True, tp=False)
-  tpevents = get_events(tp=True)
-  for prefix in ['kvm:', 'kvmmmu:', 'vmscan:', 'irq:']:
-    result += filter(lambda ev: ev.startswith(prefix), tpevents)
-  result = filter(lambda x: x not in bad, result)
+  result =  get_events(tp=False)
   result = ['cycles' if x=='cpu-cycles' else x for x in result]  # replace cpu-cycles with cycles
+  #tpevents = get_events(tp=True)
+  #for prefix in ['kvm:', 'kvmmmu:', 'vmscan:', 'irq:', 'signal:', 'kmem:', 'power:']:
+  #  result += filter(lambda ev: ev.startswith(prefix), tpevents)
+  #result = filter(lambda x: x not in bad, result)
+  result += ['power:*', 'irq:*', 'signal:*', 'kmem:*', 'cycles']
 
   # filter out events that are not supported
   p = Popen(shlex.split('bzip2 -k /dev/urandom -c'), stdout=DEVNULL)
-  perf_data = stat(p.pid, result, t=1, ann="test run")
+  perf_data = stat(p.pid, result, t=0.5, ann="test run")
   p.send_signal(SIGTERM)
+  clean = []
   for k, v in perf_data.items():
-    if v == False:
+    if v is False:
       log.notice("event %s not supported"%k)
-      result.remove(k)
-    elif v == None:
-      log.notice("event %s not counted"%k)
-      result.remove(k)
-  return result
+      #result.remove(k)
+      continue
+    elif v is None:
+      log.critical("event %s not counted"%k)
+      #result.remove(k)
+      continue
+    clean += [k]
+  return clean
 
 
 def osexec(cmd):
@@ -104,9 +109,9 @@ def kvmstat(*args, **kwargs):
 
 class PerfData(OrderedDict):
   def __init__(self, rawdata, ann=None, norm=False):
-    log.notice("raw data:\n %s" % rawdata.decode())
+    #log.notice("raw data:\n %s" % rawdata.decode())
+    # TODO: annotation ann
     super().__init__()
-    self['ann']  = ann
 
     array = rawdata.decode().split('\r\n')
     # skipping preamble
@@ -204,13 +209,16 @@ if __name__ == '__main__':
   group = parser.add_mutually_exclusive_group(required=True)
   group.add_argument('--kvmpid', type=int, help="pid of qemu process")
   group.add_argument('--pid', type=int, help="pid of normal process")
+  group.add_argument('-e', '--events', default=False, const=True, action='store_const', help="get useful events")
   args = parser.parse_args()
   print(args)
 
   stat_args = dict(pid=args.pid if args.pid else args.kvmpid, t=args.time, ann="example output", norm=True)
   if args.kvmpid:
     r = kvmstat(events=['instructions', 'cycles'], **stat_args)
-  else:
+  elif args.pid:
     r = stat(events=['instructions', 'cycles'], **stat_args)
+  else:
+    r = get_useful_events()
 
   print(r)

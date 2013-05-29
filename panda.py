@@ -8,6 +8,7 @@ from socket import socketpair
 from signal import SIGKILL
 import shlex
 import time
+import sys
 import gc
 import os
 
@@ -47,40 +48,59 @@ def bench(cmd, cpu=None, evs=None, repeats=1):
   cmd = "schedtool -a {cpu} -e perf stat -e {evs} -x, --log-fd {fd} -r {repeats} -- {cmd}" \
       .format(cpu=cpu, evs=evs, repeats=repeats, fd=other.fileno(), cmd=cmd)
   print(cmd)
-  p = Popen(shlex.split(cmd), stdout=DEVNULL, stderr=DEVNULL, pass_fds=[other.fileno()])
-  
+  p = Popen(shlex.split(cmd), stdout=DEVNULL, stderr=DEVNULL, pass_fds=[other.fileno()], start_new_session=True)
+
   r = p.wait()
   assert r == 0, "bad return code %s" % r
-  
+
   raw = me.recv(BUFSIZE)
   assert len(raw) < BUFSIZE, "data truncated"
   return parse(raw)
 
 
-def main():
-  gc.disable()
-  # perf single
-  #out = open("raw_results", "a")
-  #print(time.ctime(), file=out)
-  #for n, c in benchmarks.items():
-  #  with StopWatch() as t:
-  #    print(bench(c, evs="cycles,instructions", cpu=0, repeats=3))
-  #  print(n, t.time, file=out)
-
-  # perf double
-  out = open("raw_results_with_bg", "a")
+def perf_single(benches, out, evs):
   print(time.ctime(), file=out)
-  for bn, bc in benchmarks.items():
-    bcmd = "schedtool -a 1 -e %s" % bc
+  for n, c in benches.items():
+    with StopWatch() as t:
+      r = bench(c, evs=evs, cpu=0, repeats=3)
+      print(r)
+    print(n, t.time, r, file=out)
+
+
+def perf_double(benches, out, evs):
+  for bn, bc in benches.items():
+    bcmd = "schedtool -a 1 -e perf stat -r 999999 %s" % bc
     print("launching in BG:", bcmd)
-    print("launching in BG:", bn, file=out)
-    bp = Popen(shlex.split(bcmd), stdout=DEVNULL, stderr=DEVNULL, preexec_fn=os.setsid)
-    for n, c in benchmarks.items():
+    print("\nlaunching in BG:", bn, file=out)
+    bp = Popen(shlex.split(bcmd), stdout=DEVNULL, stderr=DEVNULL,  start_new_session=True)
+    time.sleep(3)  # warmup sleeping
+    for n, c in benches.items():
       with StopWatch() as t:
-        print(bench(c, evs="cycles,instructions", cpu=0, repeats=3))
-      print(n, t.time, file=out)
+        r = bench(c, evs="cycles,instructions", cpu=0, repeats=3)
+        print(r)
+      assert bp.poll() is None, "background unexpectedly died"
+      print(n, t.time, r, file=out)
     os.killpg(bp.pid, SIGKILL)
     bp.wait()
+    gc.collect()
+    time.sleep(0.5)
+
+
+def main():
+  gc.disable()
+  #benchmarks = dict(matrix = "/home/sources/kvmtests/benches/matrix.py -s 512 -r 1")
+  #events = "cycles,instructions,task-clock"
+  events = get_useful_events()
+
+  out = open("raw_results_single", "a")
+  perf_single(benchmarks, out=out, evs=events)
+  out = open("raw_results_double", "a")
+  perf_double(benchmarks, out=out, evs=events)
+
+  # perf double
+  #out = open("raw_results_with_bg", "a")
+  #print(time.ctime(), file=out)
+
 
 if __name__ == '__main__':
   main()
