@@ -8,11 +8,11 @@ wordpress = "siege -c 100 -t 666h http://localhost/",
 
 single = dict(
   #matrix = "/home/sources/kvmtests/benches/matrix.py -s 1024 -r 1000",
-  sdag   = "bencher.py -s 100 -- /home/sources/test_SDAG/test_sdag -t 5 -q 1000 /home/sources/test_SDAG/dataset.dat",
-  sdagp  = "bencher.py -s 100 -- /home/sources/test_SDAG/test_sdag+ -t 5 -q 1000 /home/sources/test_SDAG/dataset.dat",
-  blosc  = "/home/sources/blosc_test.py",
+  sdag   = "/home/sources/test_SDAG/test_sdag -t 5 -q 1000 /home/sources/test_SDAG/dataset.dat",
+  sdagp  = "/home/sources/test_SDAG/test_sdag+ -t 5 -q 1000 /home/sources/test_SDAG/dataset.dat",
+  blosc  = "/home/sources/kvmtests/benches/pyblosc.py",
   matrix = "/home/sources/kvmtests/benches/matrix 2048",
-  ffmpeg = "bencher.py -s 100 -- ffmpeg -i /home/sources/avatar_trailer.m2ts \
+  ffmpeg = "ffmpeg -i /home/sources/avatar_trailer.m2ts \
             -threads 1 -t 10 -y -strict -2 -loglevel panic \
             -acodec aac -aq 100 \
             -vcodec libx264 -preset fast -crf 22 \

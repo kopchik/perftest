@@ -24,11 +24,11 @@ if __name__ == '__main__':
 
   for name, cmd in benches.single.items():
     out = "results/{prefix}_{name}".format(prefix=args.prefix, name=name)
-    cmd = CMD.format(cmd=cmd, out=out, stdout=DEVNULL, stderr=DEVNULL)
+    cmd = CMD.format(cmd=cmd, out=out)
     cmd = shlex.split(cmd)
     for x in range(1):
       cnt += 1
       if args.debug:
         print("runnig %s out of %s: %s" % (cnt, tot, cmd))
-      check_call(cmd)
+      check_call(cmd, stdout=DEVNULL, stderr=DEVNULL)
       if args.sleep: time.sleep(args.sleep)
