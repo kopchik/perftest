@@ -1,6 +1,5 @@
 import waflib.Configure
 waflib.Configure.autoconfig = True
-import glob
 
 def options(opt):
   opt.load('compiler_c')
@@ -18,8 +17,5 @@ def configure(conf):
 
 def build(bld):
   print("building classes")
-  srcs = glob.glob("*c")
-  for src in srcs:
-    print(src)
-    tgt = src.split(".")[0]
-    bld.program(source=src, target=tgt)
+  bld.program(source='polute.c', target='polute', install_path='.')
+  bld.program(source='matrix.c', lib='gsl gslcblas', target='matrix', install_path='.')
