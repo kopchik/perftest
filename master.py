@@ -46,7 +46,8 @@ class cfg:
 
 
 benchmarks = dict(
-matrix = "/home/sources/kvmtests/benches/matrix.py -s 1024 -r 1000",
+#matrix = "/home/sources/kvmtests/benches/matrix.py -s 1024 -r 1000",
+matrix = "/home/sources/kvmtests/benches/matrix 2048",
 pgbench = "sudo -u postgres pgbench -c 20 -s 10 -T 100000",
 nginx_static = "siege -c 100 -t 666h http://localhost/big_static_file",  # TODO: too CPU consuming,
 wordpress = "siege -c 100 -t 666h http://localhost/",
