@@ -1,3 +1,4 @@
+#!/usr/bin/env Rscript
 library('lattice')
 
 
@@ -6,7 +7,7 @@ my.plot <- function(files, output="plots.pdf", breaks="FD") {
   for (fname in files) {
     data <- read.csv(fname, header=T)[[1]]
     h <- hist(data, breaks=breaks, col='red', main=fname)
-    # fit
+    # fit normal distribution
     xfit <- seq(min(data),max(data),length=40)
     yfit <- dnorm(xfit,mean=mean(data),sd=sd(data))
     yfit <- yfit*diff(h$mids[1:2])*length(data)
