@@ -46,8 +46,8 @@ class cfg:
 
 
 benchmarks = dict(
-#matrix = "/home/sources/kvmtests/benches/matrix.py -s 1024 -r 1000",
 matrix = "/home/sources/kvmtests/benches/matrix 2048",
+integer = "/home/sources/kvmtests/benches/int",
 pgbench = "sudo -u postgres pgbench -c 20 -s 10 -T 100000",
 nginx_static = "siege -c 100 -t 666h http://localhost/big_static_file",  # TODO: too CPU consuming,
 wordpress = "siege -c 100 -t 666h http://localhost/",
@@ -58,13 +58,7 @@ ffmpeg = "bencher.py -s 100 -- ffmpeg -i /home/sources/avatar_trailer.m2ts \
             -f mp4 /dev/null",
 sdag  = "bencher.py -s 100 -- /home/sources/test_SDAG/test_sdag -t 5 -q 1000 /home/sources/test_SDAG/dataset.dat",
 sdagp = "bencher.py -s 100 -- /home/sources/test_SDAG/test_sdag+ -t 5 -q 1000 /home/sources/test_SDAG/dataset.dat",
-blosc = "/home/sources/blosc_test.py",
-)
-
-classes = dict(
-double = "classes/build/double",
-int = "classes/build/int",
-polute = "classes/build/polute"
+blosc = "/home/sources/kvmtests/benches/pyblosc.py",
 )
 
 def selectb(*names):
