@@ -19,3 +19,4 @@ def build(bld):
   print("building classes")
   bld.program(source='polute.c', target='polute', install_path='.')
   bld.program(source='matrix.c', lib='gsl gslcblas', target='matrix', install_path='.')
+  bld.program(source='int.c', target='int', install_path='.')
