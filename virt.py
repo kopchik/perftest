@@ -26,15 +26,10 @@ class CGManager(Manager):
 
   def start(self, name):
     cg  = self.cgroups[name]
-    pid = super().start(name)
-    vm  = self.instances[name]
-    cg.add_pid(pid)
+    vm = super().start(name)
+    cg.add_pid(vm.pid)
     vm.cg = cg
-    return pid
-
-  def start_vm(self, name):
-    self.start(name)
-    return self.instances[name]
+    return vm
 
   def started(self):
     return list(filter(lambda x: x.is_running(), self.instances.values()))
