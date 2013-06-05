@@ -9,7 +9,7 @@ import os
 
 log = Log("UTILS")
 
-def check_idleness(t=10, thr=0.1):
+def check_idleness(t=10):
   cmd = "sudo perf stat -a -e cycles --log-fd 1 -x, sleep {t}"
   cycles_raw = subprocess.check_output(cmd.format(t=t), shell=True)
   cycles = int(cycles_raw.decode().split(',')[0])
