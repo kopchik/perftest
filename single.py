@@ -3,6 +3,8 @@
 from utils import run, retry, wait_idleness
 from perftool import get_useful_events
 from virt import cgmgr
+import rpyc
+import time
 
 
 benchmarks = dict(
@@ -28,7 +30,7 @@ MEASURE_TIME = 180
 IDLENESS = 3
 
 events = get_useful_events()
-events = ",".join(r)
+events = ",".join(events)
 
 with cgmgr:
   vm = cgmgr.start("0")
@@ -39,7 +41,7 @@ with cgmgr:
   #TODO: idleness
   for name, cmd in benchmarks.items():
     wait_idleness(IDLENESS*2.3)
-    perf_cmd = "sudo kvm stat -e {events} -x, -p {pid} sleep {t} -o results/single/{out}" \
+    perf_cmd = "sudo perf kvm stat -e {events} -x, -p {pid} sleep {t} -o results/single/{out}" \
                .format(pid=pid, t=MEASURE_TIME, events=events, out=name)
     p = RPopen(cmd)
     time.sleep(WARMUP_TIME)
