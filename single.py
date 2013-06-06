@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 from utils import run, retry, wait_idleness
-from perftool import get_useful_events
 from logging import basicConfig, getLogger, DEBUG
+from resource import setrlimit, RLIMIT_NOFILE
+from perftool import get_useful_events
 from os.path import isdir
 from os import geteuid
 from virt import cgmgr
@@ -25,7 +26,7 @@ ffmpeg = "bencher.py -s 100 -- ffmpeg -i /home/sources/avatar_trailer.m2ts \
             -f mp4 /dev/null",
 sdag  = "bencher.py -s 100 -- /home/sources/test_SDAG/test_sdag -t 5 -q 1000 /home/sources/test_SDAG/dataset.dat",
 sdagp = "bencher.py -s 100 -- /home/sources/test_SDAG/test_sdag+ -t 5 -q 1000 /home/sources/test_SDAG/dataset.dat",
-blosc = "/home/sources/kvmtests/benches/pyblosc.py",
+blosc = "/home/sources/kvmtests/benches/pyblosc.py -r 100000",
 )
 
 
@@ -47,10 +48,10 @@ def main():
   parser.add_argument('--prefix', required=True, help="prefix where to save the results")
   args = parser.parse_args()
 
+  log.info(args)
   if geteuid() != 0:
     sys.exit("you need root to run this scrips")
-
-  log.info(args)
+  setrlimit(RLIMIT_NOFILE, (10240, 10240))
   if args.debug:
     basicConfig(level=DEBUG)
   assert isdir(args.prefix), "prefix should be a valid directory"
@@ -68,7 +69,7 @@ def main():
 
       log.debug("waiting for idleness")
       wait_idleness(IDLENESS*2.3)
-      log.debug("starting test")
+      log.debug("starting %s" % name)
       p = RPopen(cmd)
       log.debug("warming up for %s" % WARMUP_TIME)
       time.sleep(WARMUP_TIME)
