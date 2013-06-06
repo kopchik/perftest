@@ -221,5 +221,6 @@ if __name__ == '__main__':
      r = stat(events=get_useful_events(), **stat_args)
   else:
     r = get_useful_events()
+    r = ",".join(r)
 
   pprint(r)
