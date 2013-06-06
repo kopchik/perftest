@@ -33,3 +33,8 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
+benches/int
+benches/polute
+.lock-waf_linux_build
+.*.swp
+benches/matrix
