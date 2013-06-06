@@ -45,7 +45,7 @@ def get_useful_events():
   #for prefix in ['kvm:', 'kvmmmu:', 'vmscan:', 'irq:', 'signal:', 'kmem:', 'power:']:
   #  result += filter(lambda ev: ev.startswith(prefix), tpevents)
   #result = filter(lambda x: x not in bad, result)
-  result += ['power:*', 'irq:*', 'signal:*', 'kmem:*', 'cycles']
+  result += ['irq:*', 'signal:*', 'kmem:*', 'cycles']
 
   # filter out events that are not supported
   p = Popen(shlex.split('bzip2 -k /dev/urandom -c'), stdout=DEVNULL)
