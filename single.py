@@ -41,7 +41,7 @@ with cgmgr:
   #TODO: idleness
   for name, cmd in benchmarks.items():
     wait_idleness(IDLENESS*2.3)
-    perf_cmd = "sudo perf kvm stat -e {events} -x, -p {pid} sleep {t} -o results/single/{out}" \
+    perf_cmd = "sudo perf kvm stat -e {events} -x, -p {pid} -o results/single/{out} sleep {t}" \
                .format(pid=pid, t=MEASURE_TIME, events=events, out=name)
     p = RPopen(cmd)
     time.sleep(WARMUP_TIME)
