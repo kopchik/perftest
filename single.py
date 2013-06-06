@@ -2,9 +2,14 @@
 
 from utils import run, retry, wait_idleness
 from perftool import get_useful_events
+from logging import basicConfig, getLogger, DEBUG
+from os.path import isdir
+from os import geteuid
 from virt import cgmgr
+import argparse
 import rpyc
 import time
+import gc
 
 
 benchmarks = dict(
@@ -32,19 +37,48 @@ IDLENESS = 3
 events = get_useful_events()
 events = ",".join(events)
 
-with cgmgr:
-  vm = cgmgr.start("0")
-  pid = vm.pid
-  time.sleep(BOOT_TIME)
-  rpc = retry(rpyc.connect, args=(str(vm.addr),), kwargs={"port":6666}, retries=10)
-  RPopen = rpc.root.Popen
-  #TODO: idleness
-  for name, cmd in benchmarks.items():
-    wait_idleness(IDLENESS*2.3)
-    perf_cmd = "sudo perf kvm stat -e {events} -x, -p {pid} -o results/single/{out} sleep {t}" \
-               .format(pid=pid, t=MEASURE_TIME, events=events, out=name)
-    p = RPopen(cmd)
-    time.sleep(WARMUP_TIME)
-    run(perf_cmd)
-    assert p.poll() is None, "test unexpectedly terminated"
-    p.killall()
+PERF_CMD = "sudo perf kvm stat -e {events} -x, -p {pid} -o {output} sleep {t}"
+
+
+def main():
+  log = getLogger(__name__)
+  parser = argparse.ArgumentParser(description='Experiments with single tasks')
+  parser.add_argument('--debug', default=False, const=True, action='store_const', help='enable debug mode')
+  parser.add_argument('--prefix', required=True, help="prefix where to save the results")
+  args = parser.parse_args()
+
+  if geteuid() != 0:
+    sys.exit("you need root to run this scrips")
+
+  log.info(args)
+  if args.debug:
+    basicConfig(level=DEBUG)
+  assert isdir(args.prefix), "prefix should be a valid directory"
+
+  gc.disable()
+  with cgmgr:
+    vm = cgmgr.start("0")
+    time.sleep(BOOT_TIME)
+    rpc = retry(rpyc.connect, args=(str(vm.addr),), kwargs={"port":6666}, retries=10)
+    RPopen = rpc.root.Popen
+    remains = len(benchmarks)
+    for name, cmd in benchmarks.items():
+      output = args.prefix + '/' + name
+      perf_cmd = PERF_CMD.format(pid=vm.pid, t=MEASURE_TIME, events=events, output=output)
+
+      log.debug("waiting for idleness")
+      wait_idleness(IDLENESS*2.3)
+      log.debug("starting test")
+      p = RPopen(cmd)
+      log.debug("warming up for %s" % WARMUP_TIME)
+      time.sleep(WARMUP_TIME)
+      log.debug("starting measurements")
+      run(perf_cmd)
+      assert p.poll() is None, "test unexpectedly terminated"
+      log.debug("finishing tests")
+      p.killall()
+      gc.collect()
+
+
+if __name__ == '__main__':
+  main()
