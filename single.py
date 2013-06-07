@@ -14,8 +14,8 @@ import gc
 
 
 benchmarks = dict(
-matrix = "/home/sources/kvmtests/benches/matrix 2048",
-integer = "/home/sources/kvmtests/benches/int",
+matrix = "bencher.py -s 100 -- /home/sources/kvmtests/benches/matrix 2048",
+integer = "bencher.py -s 100 -- /home/sources/kvmtests/benches/int",
 pgbench = "sudo -u postgres pgbench -c 20 -s 10 -T 100000",
 nginx_static = "siege -c 100 -t 666h http://localhost/big_static_file",  # TODO: too CPU consuming,
 wordpress = "siege -c 100 -t 666h http://localhost/",
