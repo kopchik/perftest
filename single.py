@@ -17,7 +17,7 @@ benchmarks = dict(
 matrix = "bencher.py -s 100000 -- /home/sources/kvmtests/benches/matrix 2048",
 integer = "bencher.py -s 100000 -- /home/sources/kvmtests/benches/int",
 pgbench = "sudo -u postgres pgbench -c 20 -s 10 -T 100000",
-nginx_static = "siege -c 10000 -t 666h http://localhost/big_static_file",  # TODO: too CPU consuming,
+nginx_static = "siege -c 100 -t 666h http://localhost/big_static_file",  # TODO: too CPU consuming,
 wordpress = "siege -c 100 -t 666h http://localhost/",
 ffmpeg = "bencher.py -s 100000 -- ffmpeg -i /home/sources/avatar_trailer.m2ts \
             -threads 1 -t 10 -y -strict -2 -loglevel panic \
