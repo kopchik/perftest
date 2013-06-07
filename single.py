@@ -48,21 +48,24 @@ def main():
   parser.add_argument('--prefix', required=True, help="prefix where to save the results")
   parser.add_argument('-t', '--tests', default=['single', 'double'], nargs='*')
   args = parser.parse_args()
-  import sys; print(args); sys.exit();
 
   log.info(args)
   if geteuid() != 0:
     sys.exit("you need root to run this scrips")
   setrlimit(RLIMIT_NOFILE, (10240, 10240))
+  basicConfig(level=DEBUG)
   if args.debug:
-    basicConfig(level=DEBUG)
+    global WARMUP_TIME, MEASURE_TIME, IDLENESS
+    WARMUP_TIME /= 100
+    MEASURE_TIME = 3
+    IDLENESS = 50
   assert isdir(args.prefix), "prefix should be a valid directory"
 
   gc.disable()
   if 'single' in args.tests:
     single(args)
   if 'double' in args.tests:
-    double(args)
+    double(args.prefix)
 
 def single(args):
   with cgmgr:
@@ -97,7 +100,7 @@ def double(prefix, far=False):
     cpu, bgcpu = topology.cpus_no_ht[:2]
   else:
     cpu = topology.cpus_no_ht[0]
-    bgcpu = topology.ht_siblings[cpu1][0]
+    bgcpu = topology.ht_siblings[cpu][0]
 
   with cgmgr:
     vm = cgmgr.start(str(cpu))
@@ -124,7 +127,7 @@ def double(prefix, far=False):
         print("remains %s tests" % remains)
         remains -= 1
         
-        outdir = args.prefix + '/' + bgname +'/'
+        outdir = prefix + '/' + bgname +'/'
         try: os.makedirs(outdir)
         except FileExistsError: pass
 
