@@ -117,7 +117,7 @@ def double(prefix, far=False):
 
     for bgname, bgcmd in benchmarks.items():
       log.debug("waiting for idleness")
-      wait_idleness(IDLENESS*2.3)
+      wait_idleness(IDLENESS*3.3)
       log.warning("launching %s in bg" % bgname)
       bg = BGRPopen(bgcmd)
       log.debug("warming up for %s" % WARMUP_TIME)
