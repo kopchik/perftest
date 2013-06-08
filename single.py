@@ -126,7 +126,7 @@ def double(prefix, far=False):
       for name, cmd in benchmarks.items():
         print("remains %s tests" % remains)
         remains -= 1
-        
+
         outdir = prefix + '/' + bgname +'/'
         try: os.makedirs(outdir)
         except FileExistsError: pass
