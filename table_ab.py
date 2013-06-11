@@ -21,8 +21,15 @@ for name in os.listdir(PATH+'/single/'):
   single[name] = inps
 
 double = {}
-for bg in single:
-  for fg in single:
+print(" &".join(sorted(single)), "\\\\")
+for bg in sorted(single):
+  print("{:12}".format(bg), end='')
+  for fg in sorted(single):
     p = csv2dict(PATH+'/double/'+bg+'/'+fg)
     inps = p['instructions'] / p['cycles']
-#print(single)
+    ratio = inps/single[fg]
+    double[bg,fg] = ratio
+    print("& {:4.1f}".format((1-ratio)*100), end=' ')
+  print(' \\\\')
+
+print(double['integer','blosc'])
