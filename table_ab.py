@@ -1,18 +1,7 @@
 #!/usr/bin/env python3
+from utils import csv2dict
 import os
 PATH="./results/fx/cc_auto/"
-
-def csv2dict(f):
-  d = {}
-  with open(f) as fd:
-    for l in fd.readlines():
-      if l.startswith('#') or l.isspace():
-        continue
-      l = l.strip()
-      v,k, *rest = l.split(',')
-      if k in ['cpu-clock', 'task-clock']: continue
-      d[k] = int(v)
-  return d
 
 single = {}
 for name in os.listdir(PATH+'/single/'):
