@@ -97,7 +97,6 @@ def stat(pid, events, t, ann=None, norm=False, guest=False):
       chunk = os.read(fd, BUF_SIZE)
     except OSError:
       break
-    print(len(chunk))
     if not chunk:
       break
     raw += chunk

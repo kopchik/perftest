@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from useful.typecheck import type_check
 from useful.log import Log
+from collections import OrderedDict as odict
 import subprocess
 import shlex
 import time
@@ -97,6 +98,19 @@ def retry(f, args, kwargs, sleep=1, retries=20):
   else:
     import pdb; pdb.set_trace()
     raise Exception("ne shmogla")
+
+
+def csv2dict(f):
+  d = odict()
+  with open(f) as fd:
+    for l in fd.readlines():
+      if l.startswith('#') or l.isspace():
+        continue
+      l = l.strip()
+      v,k, *rest = l.split(',')
+      if k in ['cpu-clock', 'task-clock']: continue
+      d[k] = int(v)
+  return d
 
 
 if __name__ == '__main__':
