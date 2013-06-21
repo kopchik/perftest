@@ -1,0 +1,53 @@
+# started on Fri Jun 21 03:20:17 2013
+
+553004874628,cpu-cycles
+230406460830,instructions
+76228964691,cache-references
+494487868,cache-misses
+49700628389,branch-instructions
+810929409,branch-misses
+<not supported>,bus-cycles
+15939112827,stalled-cycles-frontend
+419325143089,stalled-cycles-backend
+<not supported>,ref-cycles
+180397.034730,cpu-clock
+180397.382223,task-clock
+14,page-faults
+6349,context-switches
+7,cpu-migrations
+14,minor-faults
+0,major-faults
+0,alignment-faults
+0,emulation-faults
+104945619096,L1-dcache-loads
+11496868043,L1-dcache-load-misses
+13795196159,L1-dcache-stores
+<not supported>,L1-dcache-store-misses
+8045885474,L1-dcache-prefetches
+0,L1-dcache-prefetch-misses
+77703721510,L1-icache-loads
+562420600,L1-icache-load-misses
+6856926,L1-icache-prefetches
+<not supported>,L1-icache-prefetch-misses
+14405313037,LLC-loads
+2693687608,LLC-load-misses
+5842535432,LLC-stores
+<not supported>,LLC-store-misses
+<not supported>,LLC-prefetches
+<not supported>,LLC-prefetch-misses
+104845479432,dTLB-loads
+4475509846,dTLB-load-misses
+<not supported>,dTLB-stores
+<not supported>,dTLB-store-misses
+<not supported>,dTLB-prefetches
+<not supported>,dTLB-prefetch-misses
+77756963718,iTLB-loads
+430246,iTLB-load-misses
+50170645670,branch-loads
+811910208,branch-load-misses
+<not supported>,node-loads
+<not supported>,node-load-misses
+<not supported>,node-stores
+<not supported>,node-store-misses
+<not supported>,node-prefetches
+<not supported>,node-prefetch-misses
