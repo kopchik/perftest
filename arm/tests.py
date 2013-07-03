@@ -26,9 +26,9 @@ class LXC:
     self.tpl = tpl
     self.started = False
     self.destroy()
-    tpl_path = "/home/exe/github/kvmtests/arm/configs/lxc-template.py"
+    lxc_tpl = "/home/exe/github/kvmtests/arm/configs/lxc-template.py"
     sudo(s("btrfs subvolume snapshot ${tpl} ${path}"))
-    sudo(s("lxc-create -t ${tpl_path} -n ${name} -- --root ${path}"))
+    sudo(s("lxc-create -t ${lxc_tpl} -n ${name} -- --root ${path}"))
 
   def start(self):
     if self.started:
