@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 from socket import gethostname
+from useful.mstring import s
 from subprocess import *
+from useful.run import *
+import os.path
 import atexit
 import shlex
+import time
 import os
 
 
@@ -14,24 +18,6 @@ elif HOSTNAME == "u2":
 else:
   raise Exception("Unknown host. Please add configuration for it.")
 
-def prepare():
-  regen_cmd = "./imgregen.sh -n4 -t {prefix}/perftemplate -d {prefix}/perf" \
-              .format(prefix=PREFIX)
-  out = check_output(regen_cmd, shell=True)
-
-
-def run(cmd, sudo=False):
-  if isinstance(cmd, str):
-    cmd = shlex.split(cmd)
-  if sudo:
-    cmd = ["sudo", "-u", sudo] + cmd
-  check_call(cmd)
-
-def run_(*args, **kwargs):
-  try:
-    run(*args, **kwargs)
-  except Exception as err:
-    print("ignoring:", err)
 
 class LXC:
   def __init__(self, name, path, tpl):
@@ -40,27 +26,27 @@ class LXC:
     self.tpl = tpl
     self.started = False
     self.destroy()
-    run("btrfs subvolume snapshot %s %s"%(tpl, path), sudo='root')
-    run("lxc-create"
-        " -t /home/exe/github/kvmtests/arm/configs/lxc-template.py -n %s"
-        " -- --root %s " %(name, path), sudo='root')
+    tpl_path = "/home/exe/github/kvmtests/arm/configs/lxc-template.py"
+    sudo(s("btrfs subvolume snapshot ${tpl} ${path}"))
+    sudo(s("lxc-create -t ${tpl_path} -n ${name} -- --root ${path}"))
 
   def start(self):
     if self.started:
       return
-    run()
+    sudo(s("lxc-start -n ${self.name} -d"))
 
-  def stop(self):
-    run("lxc-shutdown -n %s"%self.name, sudo='root')
+  def stop(self, t=10):
+    sudo_(s("lxc-shutdown -n ${self.name} -t ${t}"))
 
   def destroy(self):
-    run_("lxc-destroy -n %s"%self.name, sudo='root')
-    run_("btrfs subvolume delete %s"%self.path, sudo='root')
+    self.stop(t=1)
+    sudo_(s("lxc-destroy -n {self.name}"))
+    if os.path.exists(self.path):
+      sudo(s("btrfs subvolume delete ${self.path}"))
 
 
 if __name__ == '__main__':
-  # if os.getuid() != 0:
-    # raise Exception("please run from root")
-  # prepare()
   lxc = LXC(name="perf0", path="/mnt/btrfs/perf0/", tpl="/mnt/btrfs/perftemplate/")
-
+  lxc.start()
+  time.sleep(100)
+  lxc.stop()
