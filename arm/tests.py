@@ -3,6 +3,7 @@ from socket import gethostname
 from useful.mstring import s
 from subprocess import *
 from useful.run import *
+from ipaddress import IPv4Address
 import os.path
 import atexit
 import shlex
@@ -47,7 +48,12 @@ class LXC:
 
 
 if __name__ == '__main__':
-  lxc = LXC(name="perf0", path=PREFIX+"/perf0/", tpl=PREFIX+"/perftemplate/", addr="172.16.5.10/24")
-  lxc.start()
-  time.sleep(100)
-  lxc.stop()
+  lxcs = []
+  for x in range(4):
+    ip = str (IPv4Address("172.16.5.10")+x) + '/24'
+    print(ip)
+    lxc = LXC(name="perf0", path=PREFIX+"/perf0/", tpl=PREFIX+"/perftemplate/", addr="172.16.5.10/24")
+    lxc.start()
+    lxcs += [lxc]
+
+  for lxc in lxcs: lxc.stop()
