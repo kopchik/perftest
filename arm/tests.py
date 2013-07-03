@@ -13,22 +13,23 @@ import os
 HOSTNAME = gethostname()
 if HOSTNAME == "ux32vd":
   PREFIX = "/mnt/btrfs/"
-elif HOSTNAME == "u2":
+elif HOSTNAME in ["odroid", "u2"]:
   PREFIX = "/home"
 else:
   raise Exception("Unknown host. Please add configuration for it.")
 
 
 class LXC:
-  def __init__(self, name, path, tpl):
+  def __init__(self, name, path, tpl, addr):
     self.name = name
     self.path = path
     self.tpl = tpl
     self.started = False
     self.destroy()
-    lxc_tpl = "/home/exe/github/kvmtests/arm/configs/lxc-template.py"
+    #lxc_tpl = "/home/exe/github/kvmtests/arm/configs/lxc-template.py"
+    lxc_tpl = "/home/sources/kvmtests/arm/configs/lxc-template.py"
     sudo(s("btrfs subvolume snapshot ${tpl} ${path}"))
-    sudo(s("lxc-create -t ${lxc_tpl} -n ${name} -- --root ${path}"))
+    sudo(s("lxc-create -t ${lxc_tpl} -n ${name} -- --root ${path} --addr=${addr}"))
 
   def start(self):
     if self.started:
@@ -40,13 +41,13 @@ class LXC:
 
   def destroy(self):
     self.stop(t=1)
-    sudo_(s("lxc-destroy -n {self.name}"))
+    sudo_(s("lxc-destroy -n ${self.name}"))
     if os.path.exists(self.path):
       sudo(s("btrfs subvolume delete ${self.path}"))
 
 
 if __name__ == '__main__':
-  lxc = LXC(name="perf0", path="/mnt/btrfs/perf0/", tpl="/mnt/btrfs/perftemplate/")
+  lxc = LXC(name="perf0", path=PREFIX+"/perf0/", tpl=PREFIX+"/perftemplate/", addr="172.16.5.10/24")
   lxc.start()
   time.sleep(100)
   lxc.stop()

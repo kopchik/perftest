@@ -29,7 +29,7 @@ def main():
   parser.add_argument('--root', required=True, help="rootfs location")
   parser.add_argument('--mac', default="random", help="mac address")
   parser.add_argument('--gw', default="172.16.5.1", help="default gaeway")
-  parser.add_argument('--addr', default="172.16.5.10", help="ipv4 address")
+  parser.add_argument('--addr', default="172.16.5.10/24", help="ipv4 address")
   args = parser.parse_args()
   print("passed args:", args)
   if args.mac == 'random':
