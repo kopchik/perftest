@@ -26,11 +26,21 @@ class LXC:
     self.path = path
     self.tpl = tpl
     self.started = False
-    self.destroy()
+
+  def create(self):
     #lxc_tpl = "/home/exe/github/kvmtests/arm/configs/lxc-template.py"
     lxc_tpl = "/home/sources/kvmtests/arm/configs/lxc-template.py"
-    sudo(s("btrfs subvolume snapshot ${tpl} ${path}"))
-    sudo(s("lxc-create -t ${lxc_tpl} -n ${name} -- --root ${path} --addr=${addr}"))
+    if os.path.exists(path):
+      raise Exception(s("Cannot create snapshot: path exists: ${self.path}"))
+    sudo(s("btrfs subvolume snapshot ${self.tpl} ${self.path}"))
+    sudo(s("lxc-create -t ${lxc_tpl} -n ${self.name} -- --root ${self.path} --addr=${self.addr}"))
+
+  def destroy(self):
+    self.stop(t=1)
+    sudo_(s("lxc-destroy -n ${self.name}"))
+    if os.path.exists(self.path):
+      sudo(s("btrfs subvolume delete ${self.path}"))
+      sudo_(s("rm -rf ${self.path}"))
 
   def start(self):
     if self.started:
@@ -40,12 +50,6 @@ class LXC:
   def stop(self, t=10):
     sudo_(s("lxc-shutdown -n ${self.name} -t ${t}"))
 
-  def destroy(self):
-    self.stop(t=1)
-    sudo_(s("lxc-destroy -n ${self.name}"))
-    if os.path.exists(self.path):
-      sudo(s("btrfs subvolume delete ${self.path}"))
-
 
 if __name__ == '__main__':
   lxcs = []
@@ -53,6 +57,8 @@ if __name__ == '__main__':
     ip = str (IPv4Address("172.16.5.10")+x) + '/24'
     print(ip)
     lxc = LXC(name="perf0", path=PREFIX+"/perf0/", tpl=PREFIX+"/perftemplate/", addr="172.16.5.10/24")
+    lxc.destroy()
+    lxc.create()
     lxc.start()
     lxcs += [lxc]
 
