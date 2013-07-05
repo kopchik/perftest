@@ -62,8 +62,8 @@ class LXC:
       sudo_(s("rm -rf ${self.root}"))
 
   def start(self):
-    if self.started:
-      return
+    #if self.started:
+    #  return
     sudo(s("lxc-start -n ${self.name} -d"))
 
   def stop(self, t=10):

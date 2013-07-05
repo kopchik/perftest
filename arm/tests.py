@@ -21,9 +21,9 @@ if __name__ == '__main__':
     lxc = LXC(name=name, root=PREFIX+name, tpl=PREFIX+"/perftemplate/",
               addr="172.16.5.10/24", gw="172.16.5.1")
     lxc.destroy()
-    lxc.create()
-    # lxc.start()
+    #lxc.create()
     lxcs += [lxc]
+    #lxc.start()
 
   # for lxc in lxcs:
   #   lxc.stop()
