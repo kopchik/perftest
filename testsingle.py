@@ -140,7 +140,7 @@ def double(prefix, far=False):
         log.debug("starting measurements")
         run(perf_cmd)
         assert p.poll() is None, "test unexpectedly terminated"
-        assert bg.poll() is None, "bg process suddenly died :("  
+        assert bg.poll() is None, "bg process suddenly died :("
         log.debug("finishing tests")
         p.killall()
         gc.collect()

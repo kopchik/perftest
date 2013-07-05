@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 from utils import csv2dict
+import sys
 import os
-PATH="./results/fx/cc_auto/"
+
+path_single = sys.argv[1]
+path_double = sys.argv[2]
 
 single = {}
-for name in os.listdir(PATH+'/single/'):
-  p = csv2dict(PATH+'/single/'+name)
+for name in os.listdir(path_single):
+  p = csv2dict(path_single+name)
   inps = p['instructions'] / p['cycles']
   single[name] = inps
 
@@ -14,7 +17,7 @@ print(" &".join(sorted(single)), "\\\\")
 for bg in sorted(single):
   print("{:12}".format(bg), end='')
   for fg in sorted(single):
-    p = csv2dict(PATH+'/double/'+bg+'/'+fg)
+    p = csv2dict(path_double+bg+'/'+fg)
     inps = p['instructions'] / p['cycles']
     ratio = inps/single[fg]
     double[bg,fg] = ratio

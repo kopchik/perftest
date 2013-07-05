@@ -1,20 +1,12 @@
 #!/usr/bin/env python3
 
+""" Actung! Quick`n`Dirty code, do not use in production
+"""
 from useful.run import sudo, sudo_
 from useful.mstring import s
 from libvmc import gen_mac
 import os.path
 import os
-
-
-def asroot(f):
-  def wrapped(f):
-    pid = os.fork()
-    if pid:
-      os.waitpid(pid)
-    else:
-      os.seteuid(TODO)
-
 
 TPL = """
 lxc.utsname = ${self.name}

@@ -108,7 +108,10 @@ def csv2dict(f):
         continue
       l = l.strip()
       v,k, *rest = l.split(',')
+      if k == 'cpu-cycles':
+        k = 'cycles'
       if k in ['cpu-clock', 'task-clock']: continue
+      if v == '<not supported>': continue
       d[k] = int(v)
   return d
 
