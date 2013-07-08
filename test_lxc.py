@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
-from subprocess import PIPE
-from lib.utils import run, retry, wait_idleness
-from lib.lxc import LXC
 from ipaddress import IPv4Address
 from socket import gethostname
+from subprocess import PIPE
+
+from lib.utils import run, retry, wait_idleness
+from lib.perftool import cgstat
+from lib.lxc import LXC
+
 import rpyc
 import time
+
 
 HOSTNAME = gethostname()
 if HOSTNAME == "ux32vd":
@@ -26,12 +30,15 @@ for x in range(4):
   lxc.destroy()
   lxc.create()
   lxc.start()
-print("sleeping for a while...")
-time.sleep(1)
-for lxc in lxcs:
-  rpc = rpyc.connect(lxc.addr, port=6666)
-  RPopen = rpc.root.Popen
-  p = RPopen("ls /", stdout=PIPE)
-  print(p.stdout.read())
-  lxc.stop(1)
-  lxc.destroy()
+
+cgstat(path="lxc/"+lxcs[0].name, events=['cycles'], t=1, out="/tmp/out")
+
+# print("sleeping for a while...")
+# time.sleep(1)
+# for lxc in lxcs:
+#   rpc = rpyc.connect(lxc.addr, port=6666)
+#   RPopen = rpc.root.Popen
+#   p = RPopen("ls /", stdout=PIPE)
+#   print(p.stdout.read())
+#   lxc.stop(1)
+#   lxc.destroy()

@@ -1,3 +1,14 @@
 #!/usr/bin/env python3
-print(__package__)
-from tests.test_odroid_u2 import *
+from os import geteuid
+import sys
+
+if geteuid() != 0:
+  sys.exit("you need root to run this scrips")
+
+if len(sys.argv) < 2:
+  sys.exit("please specify test name")
+
+testName = sys.argv.pop(1)
+module = __import__("tests."+testName)
+module = getattr(module, testName)
+module.main()
