@@ -4,20 +4,34 @@ from socket import gethostname
 from useful.log import Log
 
 from lib.utils import wait_idleness
-from lib.perftool import cgstat
+from lib.perftool import cgstat, get_useful_events
 from lib.lxc import LXC
 
 from tests.benches import benches
 from config import *
 
+import argparse
 import rpyc
 import time
+import gc
 
 
 log = Log("lxc")
+log.set_verbosity("debug")
 
 
 def main():
+  parser = argparse.ArgumentParser(description='Run experiments')
+  parser.add_argument('--debug', default=False, const=True, action='store_const', help='enable debug mode')
+  args = parser.parse_args()
+  print(args)
+  if args.debug:
+    global WARMUP_TIME, MEASURE_TIME, IDLENESS
+    log.critical("debug mode enabled")
+    WARMUP_TIME = 3
+    MEASURE_TIME = 3
+    IDLENESS = 40
+
   lxcs = []
   for x in range(4):
     ip = str(IPv4Address("172.16.5.10")+x)
@@ -27,19 +41,24 @@ def main():
               addr=ip, gw="172.16.5.1", cpus=[x])
     lxcs += [lxc]
     lxc.destroy()
-    lxc.create()
+    #lxc.create()
     # lxc.start()
 
 
   # single
   lxc = lxcs[0]
+  lxc.create()
   lxc.start()
-  def stat(output):
-    cgstat(path="lxc/"+lxc.name, events=['cycles'], t=1, out=output) #TODO:
-  time.sleep(2)
+  log.debug("giving VMS time to start")
+  events = get_useful_events()
+  time.sleep(6)
   rpc = rpyc.connect(lxc.addr, port=6666)
   RPopen = rpc.root.Popen
-  single(RPopen, outdir="./results/", stat=stat)
+  def stat(output):
+    cgstat(path="lxc/"+lxc.name, events=events, t=MEASURE_TIME, out=output) #TODO:
+  single(RPopen, outdir="/home/sources/perftest/results/u2/single", stat=stat)
+
+  wait_idleness(IDLENESS)
 
 
 def single(Popen, outdir, stat, benches=benches):
@@ -50,7 +69,7 @@ def single(Popen, outdir, stat, benches=benches):
     output = outdir + '/' + name
     # prepare
     log.debug("waiting for idleness")
-    wait_idleness(IDLENESS*2.3)
+    wait_idleness(IDLENESS)
     log.debug("starting %s" % name)
     # warmup
     p = Popen(cmd)
@@ -64,3 +83,6 @@ def single(Popen, outdir, stat, benches=benches):
     log.debug("finishing tests")
     p.killall()
     gc.collect()
+
+
+

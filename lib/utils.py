@@ -14,7 +14,7 @@ def check_idleness(t=10):
   cmd = "sudo perf stat -a -e cycles --log-fd 1 -x, sleep {t}"
   cycles_raw = subprocess.check_output(cmd.format(t=t), shell=True)
   cycles = int(cycles_raw.decode().split(',')[0])
-  return (cycles / t) / 10**7
+  return (cycles / t) / 10**6
 
 
 def wait_idleness(maxbusy=3, t=3):

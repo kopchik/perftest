@@ -10,4 +10,5 @@ else:
   raise Exception("Unknown host. Please add configuration for it.")
 
 WARMUP_TIME = 30
-IDLNESS = 10
+IDLENESS = 30
+MEASURE_TIME = 180
