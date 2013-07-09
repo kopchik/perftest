@@ -9,3 +9,5 @@ elif HOSTNAME in ["odroid", "u2"]:
 else:
   raise Exception("Unknown host. Please add configuration for it.")
 
+WARMUP_TIME = 30
+IDLNESS = 10

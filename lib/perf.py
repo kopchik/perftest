@@ -5,7 +5,7 @@ from ctypes import CDLL, Structure, byref, get_errno, \
     c_char_p, c_int, c_uint64, c_void_p
 
 
-perflib = CDLL("./build/libperf_api.so", use_errno=True)
+perflib = CDLL("lib/build/libperf_api.so", use_errno=True)
 perflib.cgev_create.argtypes = [c_char_p, c_char_p, c_int]
 perflib.restype = c_void_p
 MAXNUM = 10

@@ -1,5 +1,4 @@
-import gc
-from useful.log import Log
+from config import *
 
 benches = dict(
 matrix  = "bencher.py -s 100000 -- /home/sources/perftest/benches/matrix 2048",
@@ -16,29 +15,3 @@ sdag    = "bencher.py -s 100000 -- /home/sources/test_SDAG/test_sdag -t 5 -q 100
 sdagp   = "bencher.py -s 100000 -- /home/sources/test_SDAG/test_sdag+ -t 5 -q 1000 /home/sources/test_SDAG/dataset.dat",
 blosc   = "/home/sources/perftest/benches/pyblosc.py -r 100000",
 )
-
-log = Log("benches")
-
-def single(Popen, benches=benches):
-  vm = cgmgr.start("0")
-  time.sleep(BOOT_TIME)
-  remains = len(benchmarks)
-  for name, cmd in benchmarks.items():
-    print("remains %s tests" % remains)
-    remains -= 1
-    output = args.prefix + '/' + name
-
-    log.debug("waiting for idleness")
-    wait_idleness(IDLENESS*2.3)
-    log.debug("starting %s" % name)
-
-    p = Popen(cmd)
-    log.debug("warming up for %s" % WARMUP_TIME)
-    time.sleep(WARMUP_TIME)
-    log.debug("starting measurements")
-
-    run(perf_cmd)
-    assert p.poll() is None, "test unexpectedly terminated"
-    log.debug("finishing tests")
-    p.killall()
-    gc.collect()

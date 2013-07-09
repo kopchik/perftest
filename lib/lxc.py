@@ -48,7 +48,7 @@ class LXC:
       fd.write(data)
       if self.cpus:
         strcpus = ",".join(map(lambda x: str(x), self.cpus))
-        fd.write("lxc.cgroup.cpuset.cpus = %s" % strcpus)
+        fd.write("lxc.cgroup.cpuset.cpus = %s\n" % strcpus)
 
   def destroy(self):
     self.stop(t=1)
