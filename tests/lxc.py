@@ -28,7 +28,7 @@ def main():
   args = parser.parse_args()
   print(args)
   if args.debug:
-    global WARMUP_TIME, MEASURE_TIME, IDLENESS, TEARDOWN_TIME
+    global WARMUP_TIME, MEASURE_TIME, IDLENESS
     log.critical("debug mode enabled")
     WARMUP_TIME = 0
     MEASURE_TIME = 0.5
@@ -121,8 +121,6 @@ def double(Popen, BGPopen, outdir, stat, benches=benches):
         assert p.poll() is None, "test unexpectedly terminated"
         log.debug("finishing tests")
         p.killall()
-        log.debug("waiting %s for tear down" % TEARDOWN_TIME)
-        time.sleep(TEARDOWN_TIME)
 
         assert bgp.poll() is None, "background task suddenly died"
         bgp.killall()
