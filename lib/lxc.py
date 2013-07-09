@@ -28,7 +28,7 @@ lxc.pts = 1024
 
 
 class LXC:
-  def __init__(self, name, root, tpl, addr, gw):
+  def __init__(self, name, root, tpl, addr, gw, cpus=None):
     self.name = name
     self.root = root
     self.addr = addr
@@ -36,6 +36,7 @@ class LXC:
     self.tpl  = tpl
     self.mac  = gen_mac()
     self.started = False
+    self.cpus = cpus
 
   def create(self):
     if os.path.exists(self.root):
@@ -45,6 +46,9 @@ class LXC:
     with open(s("/var/lib/lxc/${self.name}/config"), 'w') as fd:
       data = s(TPL)
       fd.write(data)
+      if self.cpus:
+        strcpus = ",".join(map(lambda x: str(x), self.cpus))
+        fd.write("lxc.cgroup.cpuset.cpus = %s" % strcpus)
 
   def destroy(self):
     self.stop(t=1)
