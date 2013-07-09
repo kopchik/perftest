@@ -1,12 +1,17 @@
 from config import *
+"""
+it is important to note that tests are not
+identical. They share the same codebase, but
+not all of them has good support of arm servers.
 
+"""
 benches = dict(
 matrix  = "bencher.py -s 100000 -- /home/sources/perftest/benches/matrix 2048",
 integer = "bencher.py -s 100000 -- /home/sources/perftest/benches/int",
 pgbench = "sudo -u postgres pgbench -c 20 -s 10 -T 100000",
-nginx   = "siege -c 100 -t 666h http://localhost/big_static_file",  # TODO: too CPU consuming,
-wordpress = "siege -c 100 -t 666h http://localhost/",
-ffmpeg  = "bencher.py -s 100000 -- ffmpeg -i /home/sources/avatar_trailer.m2ts \
+nginx   = "siege -q -c 100 -t 666h http://localhost/big_static_file",  # TODO: too CPU consuming,
+wordpress = "siege -q -c 100 -t 666h http://localhost/",
+ffmpeg  = "bencher.py -s 100000 -- ffmpeg -i /home/sources/avatar_10s.m2ts \
             -threads 1 -t 10 -y -strict -2 -loglevel panic \
             -acodec aac -aq 100 \
             -vcodec libx264 -preset fast -crf 22 \
