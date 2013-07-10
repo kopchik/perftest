@@ -109,7 +109,7 @@ def kvmstat(*args, **kwargs):
 
 def cgstat(path, events, cpus, t, out):
   CMD = "perf stat -C {cpus} -e {events} -G {path} -o {output} -x, -- sleep {time}"
-  cmd = CMD.format(path=path, cpus=",".join(cpus), events=",".join(events), time=t, output=out)
+  cmd = CMD.format(path=path, cpus=",".join(map(lambda x: str(x), cpus)), events=",".join(events), time=t, output=out)
   p = check_call(shlex.split(cmd))
 
 
