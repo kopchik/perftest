@@ -107,9 +107,9 @@ def kvmstat(*args, **kwargs):
   return stat(*args, guest=True, **kwargs)
 
 
-def cgstat(path, events, t, out):
-  CMD = "perf stat -a -e {events} -G {path} -o {output} -x, -- sleep {time}"
-  cmd = CMD.format(path=path, events=",".join(events), time=t, output=out)
+def cgstat(path, events, cpus, t, out):
+  CMD = "perf stat -C {cpus} -e {events} -G {path} -o {output} -x, -- sleep {time}"
+  cmd = CMD.format(path=path, cpus=",".join(cpus), events=",".join(events), time=t, output=out)
   p = check_call(shlex.split(cmd))
 
 

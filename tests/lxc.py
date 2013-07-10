@@ -15,6 +15,7 @@ from config import *
 import argparse
 import rpyc
 import time
+import sys
 import gc
 
 
@@ -45,6 +46,7 @@ def main():
     lxc.destroy()
     #lxc.create()
     # lxc.start()
+  #sys.exit()
 
 
   # single
@@ -57,7 +59,7 @@ def main():
   rpc = rpyc.connect(lxc.addr, port=6666)
   RPopen = rpc.root.Popen
   def stat(output):
-    cgstat(path="lxc/"+lxc.name, events=events, t=MEASURE_TIME, out=output)
+    cgstat(path="lxc/"+lxc.name, cpus=lxc.cpus, events=events, t=MEASURE_TIME, out=output)  # TODO: hardcoded
   single(RPopen, outdir="/home/sources/perftest/results/u2/single", stat=stat)
 
   # double
@@ -68,7 +70,7 @@ def main():
   bgrpc = rpyc.connect(lxc.addr, port=6666)
   BGPopen = bgrpc.root.Popen
   def stat(output):
-    cgstat(path="lxc/"+lxc.name, events=events, t=MEASURE_TIME, out=output)
+    cgstat(path="lxc/"+lxc.name, cpus=lxc.cpus, events=events, t=MEASURE_TIME, out=output)
   double(RPopen, BGPopen, outdir="/home/sources/perftest/results/u2/double", stat=stat)
 
 
