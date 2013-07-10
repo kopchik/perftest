@@ -67,7 +67,7 @@ def main():
   bglxc.create()
   bglxc.start()
   time.sleep(6)
-  bgrpc = rpyc.connect(lxc.addr, port=6666)
+  bgrpc = rpyc.connect(bglxc.addr, port=6666)
   BGPopen = bgrpc.root.Popen
   def stat(output):
     cgstat(path="lxc/"+lxc.name, cpus=lxc.cpus, events=events, t=MEASURE_TIME, out=output)
