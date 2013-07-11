@@ -9,6 +9,6 @@ elif HOSTNAME in ["odroid", "u2"]:
 else:
   raise Exception("Unknown host. Please add configuration for it.")
 
-WARMUP_TIME = 5
-IDLENESS = 40
-MEASURE_TIME = 60
+WARMUP_TIME = 15
+IDLENESS = 45
+MEASURE_TIME = 180
