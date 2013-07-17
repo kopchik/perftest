@@ -7,7 +7,7 @@ document.onmousemove = function(e){
 
 function showpic(path){
   $("#image")[0].src = path;
-  $("#image").css({left:cursorX+10, top:cursorY+10, display: "block"});
+  $("#image").css({left:cursorX+5, top:cursorY+5, display: "block"});
 }
 
 function hidepic() {
