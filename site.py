@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from bottle import abort, run, mount, request, load_app
-from bottle import static_file
+from bottle import static_file, view
 from bottle import get
 from io import StringIO
 from lib.utils import csv2dict
@@ -25,11 +25,16 @@ class String:
 
 
 @get('/')
+@view('main')
 def show_table():
   result = StringIO()
   data = get_data(prefix="./results/u2/")
   print(table_tpl(data), file=result)
-  return result.getvalue()
+  return dict(body=result.getvalue())
+
+@get('/static/<filename>')
+def server_static(filename):
+    return static_file(filename, root='./static')
 
 
 def table_tpl(data):

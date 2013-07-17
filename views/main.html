@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Performance</title>
+<!--     // <script type="text/ls">
+    // myAlert = (msg) -> alert msg
+    // </script>
+  // <script src="http://livescript.net/livescript-1.1.1.js"></script>
+ -->
+ <img id="image"/>
+  <script src="/static/script.js"></script>
+  <style>#image{
+    position: absolute;
+    display: none;
+    left: 1000px;
+    top: 1000px;
+    }
+  </style>
+  <script type="text/javascript">
+    var cursorX;
+    var cursorY;
+    document.onmousemove = function(e){
+      cursorX = e.pageX;
+      cursorY = e.pageY;
+    }
+  var img = document.createElement("img");
+  function showpic(path){
+    $("#image").prop("src", path);
+    $("#image").css({left:cursorX+10, top:cursorY+10, display: "block"});
+  }
+  function hidepic() {
+    $("#image").css({display: "none"});
+  }
+  </script>>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+  </head>
+  <body>
+  {{!body}}
+  <span onmouseover="showpic('http://messir.net/static/photo.jpg')"
+  onmouseout="hidepic()"
+  >Hover here to see the image!!!</span>
+  </body>
+</html>
