@@ -2,59 +2,22 @@
 
 from bottle import abort, run, mount, request, load_app
 from bottle import static_file, view
-from bottle import get
-from io import StringIO
+from bottle import get, MakoTemplate
 from lib.utils import csv2dict
 from tests.benches import benches
 
-
-class String:
-  def __init__(self):
-    self.result = []
-
-  def p(self, *args, end='', **kwargs):
-    r = StringIO()
-    print(*args, end=end, file=r, **kwargs)
-    self.result += r.getvalue()
-
-  def pn(self, *args, **kwargs):
-    self.p(*args, end='\n', **kwargs)
-
-  def __repr__(self):
-    return "".join(self.result)
+MakoTemplate.defaults['benches'] = sorted(benches)
 
 
 @get('/')
 @view('main')
 def show_table():
-  result = StringIO()
   data = get_data(prefix="./results/u2/")
-  print(table_tpl(data), file=result)
-  return dict(body=result.getvalue())
+  return dict(data=data)
 
 @get('/static/<filename>')
 def server_static(filename):
     return static_file(filename, root='./static')
-
-
-def table_tpl(data):
-  r = String()
-  # preamble
-  r.pn("<table border=1>")
-  # header
-  r.p("<tr><td>~</td>")
-  for bench in benches:
-    r.p("<td>{}</td>".format(bench))
-  r.pn("</tr>\n")
-  # table body
-  for bg in benches:
-    r.p("<tr><td>{}</td>".format(bg))
-    for fg in benches:
-      r.p("<td>{}</td>".format(data[bg,fg]))
-    r.pn("</tr>\n")
-  # epilogue
-  r.pn("</table>")
-  return r
 
 
 def get_data(prefix, sibling=True):
@@ -68,7 +31,7 @@ def get_data(prefix, sibling=True):
       reference = csv2dict(ref_prefix+"{fg}".format(fg=fg))
       sample = csv2dict(sample_prefix+"/{bg}/{fg}".format(bg=bg,fg=fg))
       v = get_degr(reference, sample)
-      r[bg,fg] = "{:.1f}".format(v)
+      r[bg,fg] = get_degr(reference, sample)
   return r
 
 

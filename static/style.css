@@ -1,0 +1,9 @@
+#image{
+  position: absolute;
+  display: none;
+  left: 1000px;
+  top: 1000px;
+}
+
+.red { background-color: red; }
+.yellow { background-color: yellow; }

@@ -1,0 +1,1 @@
+myAlert = (msg) -> alert msg
