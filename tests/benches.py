@@ -1,10 +1,5 @@
 from config import *
-"""
-it is important to note that tests are not
-identical. They share the same codebase, but
-not all of them has good support of arm servers.
 
-"""
 benches = dict(
 matrix  = "bencher.py -s 100000 -- /home/sources/perftest/benches/matrix 2048",
 integer = "bencher.py -s 100000 -- /home/sources/perftest/benches/int",

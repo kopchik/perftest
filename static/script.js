@@ -1,15 +1,22 @@
-var cursorX;
-var cursorY;
-document.onmousemove = function(e){
-  cursorX = e.pageX;
-  cursorY = e.pageY;
-}
-
-function showpic(path){
-  $("#image")[0].src = path;
-  $("#image").css({left:cursorX+5, top:cursorY+5, display: "block"});
-}
-
-function hidepic() {
-  $("#image").css({display: "none"});
-}
+(function(){
+  var cursorX, cursorY, showpic, hidepic, out$ = typeof exports != 'undefined' && exports || this;
+  cursorX = 100;
+  cursorY = 100;
+  document.onmousemove = function(e){
+    cursorX = e.pageX;
+    cursorY = e.pageY;
+  };
+  out$.showpic = showpic = function(path){
+    $('#image')[0].src = path;
+    $('#image').css({
+      left: cursorX + 15,
+      top: cursorY + 15,
+      display: "block"
+    });
+  };
+  out$.hidepic = hidepic = function(){
+    return $('#image').css({
+      display: "none"
+    });
+  };
+}).call(this);

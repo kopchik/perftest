@@ -10,29 +10,32 @@
 
 
 %def render_table(data,prefix='/static/u2/'):
-<table class='table' border=1>
+<table class='table' border=1 onmouseout="hidepic()">
   <!-- header -->
   <tr>
     <td>~</td>
   %for bench in benches:
-    <td>{{bench}}</td>
+    <td><b>{{bench}}</b></td>
   %end
   </tr>
   <!-- body -->
   %for bg in benches:
   <tr>
-    <td>{{bg}}</td>
+    <td><b>{{bg}}</b></td>
     %for fg in benches:
       %value = data[bg,fg]
       %v  = "{:.1f}".format(value)
-      %path = "{prefix}/{bg}/{fg}.jpeg".format(**locals())
+      %path = "{prefix}/{bg}/{fg}.png".format(**locals())
       %if value > 15:
-      <td class="red" onmouseover="showpic('{{path}}')">{{v}}</td>
+        %cls = "red"
       %elif value > 10:
-      <td class="yellow">{{v}}</td>
+        %cls = "yellow"
       %else:
-      <td>{{v}}</td>
+        %cls = "white"
       %end
+      <td class="{{cls}}" onmouseover="showpic('{{path}}')">
+      <a href="{{path}}">{{v}}</a>
+      </td>
     %end
   </tr>
   %end
@@ -42,10 +45,6 @@
 
   <body>
     <img id="image"/>
-    {{render_table(data)}}
-    <span onmouseover="showpic('http://messir.net/static/photo.jpg')"
-    onmouseout="hidepic()">
-      Hover here to see the image!!!
-    </span>
+    %render_table(data)
   </body>
 </html>

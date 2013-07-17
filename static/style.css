@@ -1,8 +1,8 @@
 #image{
-  position: absolute;
   display: none;
-  left: 1000px;
-  top: 1000px;
+  position: absolute;
+  max-height: 500px;
+  max-width: 500px;
 }
 
 .red { background-color: red; }

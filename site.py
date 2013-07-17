@@ -15,7 +15,7 @@ def show_table():
   data = get_data(prefix="./results/u2/")
   return dict(data=data)
 
-@get('/static/<filename>')
+@get('/static/<filename:path>')
 def server_static(filename):
     return static_file(filename, root='./static')
 

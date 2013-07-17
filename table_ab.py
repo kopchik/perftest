@@ -12,8 +12,9 @@ for name in os.listdir(path_single):
   inps = p['instructions'] / p['cycles']
   single[name] = inps
 
+summary = 0
 double = {}
-print(" &".join(sorted(single)), "\\\\")
+print("~           &", " &".join(sorted(single)), "\\\\")
 for bg in sorted(single):
   print("{:12}".format(bg), end='')
   for fg in sorted(single):
@@ -21,7 +22,15 @@ for bg in sorted(single):
     inps = p['instructions'] / p['cycles']
     ratio = inps/single[fg]
     double[bg,fg] = ratio
-    print("& {:4.1f}".format((1-ratio)*100), end=' ')
-  print(' \\\\')
-
-print(double['integer','blosc'])
+    percents = (1 - ratio) * 100
+    if percents < 0:
+        print("& \\green {:4.1f}".format(percents), end=' ')
+    elif percents > 15:
+        print("& \\red {:4.1f}".format(percents), end=' ')
+    elif percents > 10:
+        print("& \\orange {:4.1f}".format(percents), end=' ')
+    else:
+        print("& {:4.1f}".format(percents), end=' ')
+    summary += (1-ratio)*100
+  print(' \\\\ \\hline')
+print("AVG penalty:", summary)
