@@ -9,7 +9,7 @@
   </head>
 
 
-%def render_table(data,prefix='/static/u2/'):
+%def render_table(data, prefix):
 <table class='table' border=1 onmouseout="hidepic()">
   <!-- header -->
   <tr>
@@ -42,9 +42,39 @@
 </table>
 %end
 
+%def rect(color):
+  %return '<div class="rect {color}">&nbsp;&nbsp;</div>'.format(color=color)
+%end
 
   <body>
-    <img id="image"/>
-    %render_table(data)
+    <div id="header">
+      <h1>Task Compatibility Chart</h1>
+      <h2>How tasks neighbor with each other</h2>
+    </div>
+
+    <hr class="hr-bar">
+    <div id="bar">
+      <a href="#">Odroid-U2</a>
+      <a href="#">PandaBoard-ES</a>
+      <a href="#">AMD FX-8120</a>
+    </div>
+    <hr class="hr-bar">
+
+    <div id="content">
+      <!-- this is the image activated by js -->
+      <img id="image"/>
+
+      <h3>Legend</h3>
+      <div>
+      White ({{!rect("white")}}) -- tasks can run simultaneusly without much interference;<br>
+      Yellow({{!rect("yellow")}}) -- the foreground task slows down for 10-15%;<br>
+      Red({{!rect("red")}}) -- the foreground task slows down for more than 15%.<br>
+      </div>
+      %for experiment in experiments:
+        <h1>{{experiment['title']}}</h1>
+        {{experiment.get('annotation','')}}<br><br>
+        %render_table(experiment['data'], experiment['imgpath'])
+      %end
+    </div>
   </body>
 </html>

@@ -15,7 +15,7 @@
     });
   };
   out$.hidepic = hidepic = function(){
-    return $('#image').css({
+    $('#image').css({
       display: "none"
     });
   };

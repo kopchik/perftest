@@ -12,8 +12,34 @@ MakoTemplate.defaults['benches'] = sorted(benches)
 @get('/')
 @view('main')
 def show_table():
+  experiments = []
+  # u2
   data = get_data(prefix="./results/u2/")
-  return dict(data=data)
+  experiments += [dict(
+    data=data,
+    imgpath="/static/u2",
+    title="Samsung Exynos-4412 (Odroid-U2 board)")]
+  # fx
+  data = get_data(prefix="./results/fx/cc_auto/notp", sibling=True)
+  experiments += [dict(
+    data=data,
+    imgpath="/static/fx_near",
+    title="AMD FX-8120 (sibling cores)")]
+  data = get_data(prefix="./results/fx/cc_auto/notp", sibling=False)
+  experiments += [dict(
+    data=data,
+    imgpath="/static/fx_far",
+    title="AMD FX-8120 (cores from different modules)")]
+  # panda
+  data = get_data(prefix="./results/panda/notp/")
+  experiments += [dict(
+      data=data,
+      imgpath="/static/panda",
+      title="TI OMAP 4460 (PandaBoard-ES)",
+      annotation="""The hardware performance counters didn't work well
+      well on this board. This data cannot be trust.""")]
+
+  return dict(experiments=experiments)
 
 @get('/static/<filename:path>')
 def server_static(filename):
@@ -30,14 +56,16 @@ def get_data(prefix, sibling=True):
     for fg in benches:
       reference = csv2dict(ref_prefix+"{fg}".format(fg=fg))
       sample = csv2dict(sample_prefix+"/{bg}/{fg}".format(bg=bg,fg=fg))
-      v = get_degr(reference, sample)
       r[bg,fg] = get_degr(reference, sample)
   return r
 
 
 def get_degr(reference, sample):
   ref_ipc = reference['instructions']/reference['cycles']
-  ipc = sample['instructions']/sample['cycles']
+  try:
+    ipc = sample['instructions']/sample['cycles']
+  except KeyError:
+    return -666
   return (1 - ipc/ref_ipc) * 100
 
 
