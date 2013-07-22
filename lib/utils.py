@@ -110,9 +110,9 @@ def csv2dict(f):
       v,k, *rest = l.split(',')
       if k == 'cpu-cycles':
         k = 'cycles'
-      if k in ['cpu-clock', 'task-clock']: continue
+      # if k in ['cpu-clock', 'task-clock']: continue
       if v == '<not supported>': continue
-      d[k] = int(v)
+      d[k] = int(float(v))
   return d
 
 
