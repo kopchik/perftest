@@ -36,7 +36,7 @@ def show_table():
       data=data,
       imgpath="/static/panda",
       title="TI OMAP 4460 (PandaBoard-ES)",
-      annotation="""The hardware performance counters didn't work well
+      annotation="""The hardware performance counters didn't work
       well on this board. This data cannot be trust.""")]
 
   return dict(experiments=experiments)
