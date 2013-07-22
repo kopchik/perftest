@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 from lib.utils import csv2dict
+import matplotlib as mpl
+mpl.use('Agg')
 from pylab import *
 import argparse
 import sys
