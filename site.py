@@ -70,4 +70,4 @@ def get_degr(reference, sample):
 
 
 if __name__ == '__main__':
-  run(debug=True, interval=0.1, reloader=True)
+  run(debug=True, interval=0.1, host='0.0.0.0', port=8080, reloader=True)
