@@ -21,7 +21,7 @@
   <!-- body -->
   %for bg in benches:
   <tr>
-    <td><b>{{bg}}</b></td>
+    <td class="bg"><b>{{bg}}</b></td>
     %for fg in benches:
       %value = data[bg,fg]
       %v  = "{:.1f}".format(value)

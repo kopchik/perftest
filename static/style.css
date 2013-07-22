@@ -85,9 +85,12 @@ body {
   border-collapse:collapse;
   border-color: #A6A6A6;
 }
+.table td.bg {
+  text-align: left;
+}
 .table td {
   text-align: right;
-  padding: 0 0 2px 0;
+  padding: 0 2px 2px 2px;
 }
 .table a:link {
   text-decoration: none;
