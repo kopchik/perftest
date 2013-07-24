@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
+from tests.benches import benches
 from lib.utils import csv2dict
 import argparse
+import shlex
 import sys
 import os
 
@@ -51,6 +53,7 @@ def to_percent(y, position):
 
 def main(argv):
   data = []
+  files = []
 
   parser = argparse.ArgumentParser(description='Analyze data from perf stat.')
   parser.add_argument('-p', '--prefix', required=True, help="prefix path to data")
@@ -59,10 +62,9 @@ def main(argv):
   parser.add_argument('-o', '--output', help="where to save image")
   parser.add_argument('-s', '--sibling', action='store_const', default=False, const=True, help="sibling cores?")
   parser.add_argument('--show', action='store_const', const=True, default=False, help="show plot?")
-  args = parser.parse_args()
-  print(args)
+  args = parser.parse_args(argv[1:])
+  # print(args)
 
-  files = []
   files.append("{prefix}/single/{fg}".format(**vars(args)))
   if args.sibling:
     files.append("{prefix}/double_near/{bg}/{fg}".format(**vars(args)))
@@ -100,33 +102,59 @@ def main(argv):
     labels += ["{name} [{freq}]".format(name=k, freq=fmt_int(v/mtime))]
     values += [v]
 
-  # bars
+  ## bars
   bars = barh(enum_(ratio, offset=-BARWIDTH/2), ratio, height=BARWIDTH)
   yticks(enum_(labels), labels)
-  # vertical line
+  ## vertical line
   axvline(linewidth=3, color='g')
-  # adjust y to fit all plots
+  ## adjust y to fit all plots
   # if len(values) == 1:
   #   ylim(-1,1)
   # elif len(values) == 2:
   #   ylim(-1,2)
   # elif len(values) == 17:
   ylim(-1, len(values))
-  # adjust left margin to fit long counter names
-  subplots_adjust(left=0.34)
-  # display grid
+  ## display grid
   grid()
-  # show X in percents
+  ## show X in percents
   gca().xaxis.set_major_formatter(to_percent)
   xmin, xmax = xlim()
   if xmin >= 0:
     xmin = -(xmax-xmin)/50
   xlim(xmin,xmax)
+  ## adjust left margin to fit long counter names
+  # subplots_adjust(left=0.34)
+  tight_layout(pad=0.5)
 
   if args.output:
     savefig(args.output)
   if args.show:
     show()
+  figure()  # start new figure
+
+def regen(src, dst, sibling=False):
+  for bg in benches:
+    for fg in benches:
+      try:
+        os.makedirs("{dst}/{bg}".format(dst=dst, bg=bg))
+      except FileExistsError:
+        pass
+      cmd = './compare.py -p {src} -f {fg} -b {bg} -o "{dst}/{bg}/{fg}.png"' \
+            .format(**locals())
+      cmd = shlex.split(cmd)
+      if sibling: cmd += ["-s"]
+      # print(cmd)
+      main(cmd)
 
 if __name__ == '__main__':
-  main(sys.argv)
+  if len(sys.argv) > 1:
+    main(sys.argv)
+  else:
+    print("u2")
+    regen("./results/u2/", "./static/u2/")
+    print("fx far")
+    regen("./results/fx/cc_auto/notp/", "./static/fx_far/")
+    print("fx near")
+    regen("./results/fx/cc_auto/notp/", "./static/fx_near/", sibling=True)
+    print("panda")
+    regen("./results/panda/notp/", "./static/panda/")

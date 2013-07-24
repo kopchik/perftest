@@ -10,6 +10,11 @@
     var img, screen_sizeY, cb;
     img = $('#image');
     img[0].src = path;
+    $('#image').css({
+      left: cursorX,
+      top: cursorY,
+      display: "block"
+    });
     screen_sizeY = document.body.clientWidth;
     cb = function(){
       var img_sizeY, img_posX, img_posY;
@@ -18,13 +23,7 @@
       img_posY = cursorY + img_sizeY < screen_sizeY
         ? cursorY
         : cursorY - img_sizeY;
-      $('#image').css({
-        left: img_posX,
-        top: img_posY,
-        display: "block"
-      });
     };
-    img.load(cb);
   };
   out$.hidepic = hidepic = function(){
     $('#image').css({

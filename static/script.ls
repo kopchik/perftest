@@ -8,6 +8,9 @@ document.onmousemove = !(e) ->
 export showpic = !(path) ->
   img = ($ \#image)
   img.0.src = path
+  ($ \#image).css {left: cursorX, \
+                top: cursorY, \
+                display: "block"}
   screen_sizeY = document.body.clientWidth
 
   cb = !->
@@ -16,11 +19,8 @@ export showpic = !(path) ->
     img_posY = if cursorY + img_sizeY < screen_sizeY
       then cursorY
       else cursorY - img_sizeY
-    ($ \#image).css {left: img_posX, \
-                    top: img_posY, \
-                    display: "block"}
     #alert "OPA " + cursorY + " " + sizeY + " " + img_size_y
-  img.load(cb)
+  #img.load(cb)
 
 export hidepic = !->
   ($ \#image).css {display: "none"}
