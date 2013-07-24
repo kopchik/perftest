@@ -18,7 +18,7 @@ for bg in "${benches[@]}"; do
 done
 }
 
-regen "./results/panda/notp/" "./static/panda/"
-regen "./results/u2/" "./static/u2/"
-regen "./results/fx/cc_auto/notp/" "./static/fx_far/"
-regen "./results/fx/cc_auto/notp/" "./static/fx_near/" "near"
+# regen "./results/panda/notp/" "./static/panda/" &
+regen "./results/u2/" "./static/u2/" &
+# regen "./results/fx/cc_auto/notp/" "./static/fx_far/" &
+# regen "./results/fx/cc_auto/notp/" "./static/fx_near/" "near" &

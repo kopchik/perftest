@@ -26,13 +26,10 @@
       %value = data[bg,fg]
       %v  = "{:.1f}".format(value)
       %path = "{prefix}/{bg}/{fg}.png".format(**locals())
-      %if value > 15:
-        %cls = "red"
-      %elif value > 10:
-        %cls = "yellow"
-      %else:
-        %cls = "white"
-      %end
+      %if   value > 15: cls = "red"
+      %elif value > 10: cls = "yellow"
+      %elif value < 0:  cls = "green"
+      %else: cls = "white"
       <td class="{{cls}}" onmouseover="showpic('{{path}}')">
       <a href="{{path}}">{{v}}</a>
       </td>
@@ -69,6 +66,14 @@
       White ({{!rect("white")}}) -- tasks can run simultaneusly without much interference;<br>
       Yellow({{!rect("yellow")}}) -- the foreground task slows down for 10-15%;<br>
       Red({{!rect("red")}}) -- the foreground task slows down for more than 15%.<br>
+      </div>
+      <h3>NUMA topology</h3>
+      <div>
+        NUMA topology is a graph representing relations between CPU cores and resources.
+        Cores that share the most resources are called sibling cores.
+        Cores sharing the least -- distant cores.
+        Our ARM boards have uniform cores and therefore they all equal.
+
       </div>
       %for experiment in experiments:
         <h1>{{experiment['title']}}</h1>

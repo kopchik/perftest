@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 from lib.utils import csv2dict
-import matplotlib as mpl
-mpl.use('Agg')
-from pylab import *
 import argparse
 import sys
 import os
+
+import matplotlib as mpl
+if 'DISPLAY' not in os.environ:
+  mpl.use('Agg')
+from pylab import *
+
 
 BARWIDTH = 0.8
 
@@ -54,9 +57,10 @@ def main(argv):
   parser.add_argument('-b', '--bg', required=True, help="background task")
   parser.add_argument('-f', '--fg', required=True, help="foreground task")
   parser.add_argument('-o', '--output', help="where to save image")
-  parser.add_argument('-s', '--sibling', nargs='?', type=bool, default=False, help="sibling cores?")
+  parser.add_argument('-s', '--sibling', action='store_const', default=False, const=True, help="sibling cores?")
   parser.add_argument('--show', action='store_const', const=True, default=False, help="show plot?")
   args = parser.parse_args()
+  print(args)
 
   files = []
   files.append("{prefix}/single/{fg}".format(**vars(args)))
@@ -89,7 +93,8 @@ def main(argv):
     v = data[0][k]
     if v == 0 or vref == 0: continue
     r = v/vref-1
-    if abs(r) <0.2: continue  # skip parameters that didn't change much
+    if abs(r) <0.2 and k != "stalled-cycles-backend":
+      continue  # skip parameters that didn't change much
     if k == 'cpu-migrations': continue  # skip irrelevant counters
     ratio += [r]
     labels += ["{name} [{freq}]".format(name=k, freq=fmt_int(v/mtime))]
@@ -101,10 +106,12 @@ def main(argv):
   # vertical line
   axvline(linewidth=3, color='g')
   # adjust y to fit all plots
-  if len(values) == 1:
-    ylim(-1,1)
-  elif len(values) == 2:
-    ylim(-1,2)
+  # if len(values) == 1:
+  #   ylim(-1,1)
+  # elif len(values) == 2:
+  #   ylim(-1,2)
+  # elif len(values) == 17:
+  ylim(-1, len(values))
   # adjust left margin to fit long counter names
   subplots_adjust(left=0.34)
   # display grid

@@ -29,7 +29,7 @@ def show_table():
   experiments += [dict(
     data=data,
     imgpath="/static/fx_far",
-    title="AMD FX-8120 (cores from different modules)")]
+    title="AMD FX-8120 (distant cores)")]
   # panda
   data = get_data(prefix="./results/panda/notp/")
   experiments += [dict(
