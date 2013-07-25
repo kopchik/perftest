@@ -9,11 +9,14 @@ import os
 import matplotlib as mpl
 if 'DISPLAY' not in os.environ:
   mpl.use('Agg')
+from matplotlib.ticker import MaxNLocator
 from pylab import *
 
 
 BARWIDTH = 0.8
-
+# BARCOLOR = "#78A4EB"
+# BARCOLOR = "#6C9EF0"
+BARCOLOR = "#548BE3"
 
 def die(reason):
   sys.exit(reason)
@@ -61,6 +64,7 @@ def main(argv):
   parser.add_argument('-f', '--fg', required=True, help="foreground task")
   parser.add_argument('-o', '--output', help="where to save image")
   parser.add_argument('-s', '--sibling', action='store_const', default=False, const=True, help="sibling cores?")
+  parser.add_argument('-n', '--no-filter', action='store_const', default=False, const=True, help="Do not filter events")
   parser.add_argument('--show', action='store_const', const=True, default=False, help="show plot?")
   args = parser.parse_args(argv[1:])
   # print(args)
@@ -95,29 +99,32 @@ def main(argv):
     v = data[0][k]
     if v == 0 or vref == 0: continue
     r = v/vref-1
-    if abs(r) <0.2 and k != "stalled-cycles-backend":
-      continue  # skip parameters that didn't change much
+    if not args.no_filter:
+      if abs(r) <0.05 and k != "stalled-cycles-backend":
+        continue  # skip parameters that didn't change much
+      if v/mtime < 1000:
+        continue
     if k == 'cpu-migrations': continue  # skip irrelevant counters
     ratio += [r]
     labels += ["{name} [{freq}]".format(name=k, freq=fmt_int(v/mtime))]
     values += [v]
 
-  ## bars
-  bars = barh(enum_(ratio, offset=-BARWIDTH/2), ratio, height=BARWIDTH)
+  # autoscale()
+  ## enlarge font size
+  tick_params(axis='both', which='major', labelsize=16)
+  ## draw bars
+  bars = barh(enum_(ratio, offset=-BARWIDTH/2), ratio, height=BARWIDTH, color=BARCOLOR)
   yticks(enum_(labels), labels)
   ## vertical line
-  axvline(linewidth=3, color='g')
+  axvline(linewidth=4, color='g')
   ## adjust y to fit all plots
-  # if len(values) == 1:
-  #   ylim(-1,1)
-  # elif len(values) == 2:
-  #   ylim(-1,2)
-  # elif len(values) == 17:
-  ylim(-1, len(values))
+  ylim(-0.5, len(values)-0.5)
   ## display grid
-  grid()
+  grid(lw=1)
   ## show X in percents
-  gca().xaxis.set_major_formatter(to_percent)
+  xaxis = gca().xaxis
+  xaxis.set_major_formatter(to_percent)
+  xaxis.set_major_locator(MaxNLocator(nbins=5, prune='upper'))
   xmin, xmax = xlim()
   if xmin >= 0:
     xmin = -(xmax-xmin)/50

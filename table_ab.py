@@ -31,6 +31,7 @@ for bg in sorted(single):
         print("& \\orange {:4.1f}".format(percents), end=' ')
     else:
         print("& {:4.1f}".format(percents), end=' ')
-    summary += (1-ratio)*100
+    summary += percents
   print(' \\\\ \\hline')
-print("AVG penalty:", summary)
+print("Total percents of overhead:", summary)
+print("average:", summary/len(single)**2)
