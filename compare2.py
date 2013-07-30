@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from collections import OrderedDict
 from os.path import basename
+from itertools import cycle
 import argparse
 import shlex
 import sys
@@ -34,7 +35,6 @@ def to_percent(y, position):
 
 
 
-
 BARWIDTH = 0.7
 styles = [
   dict(hatch="/", color="#25C600"),
@@ -48,47 +48,21 @@ styles = [
   dict(hatch="|+", color="white"),
   dict(hatch="/", color="#FA8258"), # chart orange
 ]
-hatches = r"- +  x \\ * o O | .".split()
-from itertools import cycle
 styles = [style for style, _ in zip(cycle(styles), range(10))]
 
 def enum_(it, offset=0):
   return [i+offset for i,_ in enumerate(it)]
 
-profiles=dict(fx=Struct(), u2=Struct())
+
 ######
 # U2 #
 ######
+
 ## brutality:
 # cd ./results/u2/single/
 # ../../../compare2.py sdagp matrix nginx pgbench wordpress blosc sdag ffmpeg integer
 ## sensitivity:
 # ../../../compare2.py sdagp pgbench matrix sdag nginx wordpress ffmpeg blosc integer
-exclude = """
-L1-dcache-load-misses
-L1-dcache-store-misses
-L1-icache-load-misses
-alignment-faults
-branch-instructions
-branch-load-misses
-branch-misses
-cache-misses
-context-switches
-cpu-clock
-cpu-migrations
-dTLB-load-misses
-dTLB-store-misses
-emulation-faults
-iTLB-load-misses
-major-faults
-minor-faults
-page-faults
-ref-cycles
-task-clock
-stalled-cycles-frontend
-L1-dcache-stores
-"""
-profiles['u2'].exclude = exclude
 
 ###########
 # FX-8120 #
@@ -98,34 +72,6 @@ profiles['u2'].exclude = exclude
 # ../../../../../compare2.py matrix nginx blosc pgbench wordpress sdag sdagp ffmpeg integer
 ## sensitivity
 # ../../../../../compare2.py pgbench sdagp matrix blosc nginx sdag wordpress ffmpeg integer
-exclude="""
-L1-dcache-load-misses
-L1-dcache-prefetch-misses
-L1-dcache-prefetches
-L1-dcache-stores
-L1-icache-load-misses
-L1-icache-prefetches
-LLC-load-misses
-LLC-loads
-LLC-stores
-alignment-faults
-branch-load-misses
-branch-misses
-cache-misses
-context-switches
-cpu-clock
-cpu-migrations
-dTLB-load-misses
-emulation-faults
-iTLB-load-misses
-major-faults
-minor-faults
-page-faults
-task-clock
-"""
-profiles['fx'].exclude = exclude
-
-
 
 def gen_plot(files, annotations=[], thr=0.3, _show=False, output=None):
   num = len(files)
@@ -196,12 +142,8 @@ def gen_plot(files, annotations=[], thr=0.3, _show=False, output=None):
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Analyze data from perf stat.')
-  # parser.add_argument('-p', '--prefix', required=True, help="prefix path to data")
-  # parser.add_argument('-b', '--bg', required=True, help="background task")
-  # parser.add_argument('-f', '--fg', required=True, help="foreground task")
   parser.add_argument('-o', '--output', default=None, help="where to save image")
   # parser.add_argument('-s', '--sibling', action='store_const', default=False, const=True, help="sibling cores?")
-  # parser.add_argument('-n', '--no-filter', action='store_const', default=True, const=True, help="Do not filter events")
   parser.add_argument('-t', '--threshold', type=float, default=0.05, help="foreground task")
   parser.add_argument('--show', action='store_const', const=True, default=False, help="show plot?")
   parser.add_argument('-f', '--files', nargs='+')
