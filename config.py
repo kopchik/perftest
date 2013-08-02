@@ -1,4 +1,5 @@
 from socket import gethostname
+from useful.mystruct import Struct
 
 # LXC
 HOSTNAME = gethostname()
@@ -11,6 +12,17 @@ elif HOSTNAME == 'p1':
 else:
   raise Exception("Unknown host. Please add configuration for it.")
 
+
 WARMUP_TIME = 15
 IDLENESS = 45
 MEASURE_TIME = 180
+
+configs = {}
+# FX
+config = Struct(
+  hostname = "fx",
+  virtualization = "qemu",
+  has_siblings = True,
+  results_path = "./results/fx/cc_auto/notp/"
+  )
+configs["fx"] = config
