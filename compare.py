@@ -9,13 +9,13 @@ if __name__ == '__main__':
   parser.add_argument('--show', action='store_const', const=True, default=False, help="show plot?")
   parser.add_argument('--title', default=None)
   parser.add_argument('-a', '--annotations', default=None, nargs='+')
-  parser.add_argument('-f', '--files', nargs='+')
+  parser.add_argument('-f', '--files', nargs='+', required=True)
 
   args = parser.parse_args()
   print(args)
   perfbars(files=args.files,
            annotations=args.annotations,
            thr=args.threshold,
-           _title=args.title,
-           _show=args.show,
+           title=args.title,
+           show=args.show,
            output=args.output)

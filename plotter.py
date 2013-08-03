@@ -77,8 +77,8 @@ def enum_(it, offset=0):
 # ../../../../../compare2.py pgbench sdagp matrix blosc nginx sdag wordpress ffmpeg integer
 
 
-def perfbars(files, annotations=[], thr=0.01, _show=False, output=None, _title=None):
-  figure()
+def perfbars(files, annotations=[], thr=0.01, show=False, output=None, title=None):
+  p.figure()
   num = len(files)
   assert num > 0, "please provide at least one path"
 
@@ -105,31 +105,31 @@ def perfbars(files, annotations=[], thr=0.01, _show=False, output=None, _title=N
   for b in bars:
     print(b, labels)
 
-  ind = arange(len(labels))
+  ind = p.arange(len(labels))
 
-  if _title:
-    title(_title, weight="semibold")
+  if title:
+    p.title(title, weight="semibold")
   ## title
   # title(" | ".join(map(basename, fnames)))
 
   ## bars
   for i, bar in enumerate(bars):
     print(annotations[i])
-    barh(ind-BARWIDTH/num*i, bar, height=BARWIDTH/num, label=annotations[i], **styles[i]) #color=cm.gist_ncar(1-1/num*i), hatch=hatches[i], alpha=0.7)
+    p.barh(ind-BARWIDTH/num*i, bar, height=BARWIDTH/num, label=annotations[i], **styles[i]) #color=cm.gist_ncar(1-1/num*i), hatch=hatches[i], alpha=0.7)
 
   ## reverse legend
   # handles, labels = gca().get_legend_handles_labels()
   # legend(handles[::-1], labels[::-1], loc='best')
-  legend(loc="best")
+  p.legend(loc="best")
 
   ## grid
-  grid(lw=1)
+  p.grid(lw=1)
 
   ## xaxis
-  xaxis = gca().xaxis
+  xaxis = p.gca().xaxis
   # xaxis.set_major_formatter(to_percent)
   # xaxis.set_major_locator(MaxNLocator(nbins=4, prune='upper'))
-  xlabel("Avg. number of events per CPU cycle")
+  p.xlabel("Avg. number of events per CPU cycle")
   # xlim(0,1)
 
   ## set aspect
@@ -137,14 +137,14 @@ def perfbars(files, annotations=[], thr=0.01, _show=False, output=None, _title=N
   # g.set_aspect(0.6)
 
   ## yaxis
-  yticks(enum_(labels), labels)
-  ylim(-0.5, len(labels)-0.5)
+  p.yticks(enum_(labels), labels)
+  p.ylim(-0.5, len(labels)-0.5)
 
-  tight_layout(pad=0.5)
+  p.tight_layout(pad=0.5)
   if output:
-    savefig(output)
-  if _show:
-    show()
+    p.savefig(output)
+  if show:
+    p.show()
 
 
 
