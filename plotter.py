@@ -17,22 +17,25 @@ if 'DISPLAY' not in os.environ:
 from matplotlib.colorbar import ColorbarBase
 from matplotlib.ticker import MaxNLocator
 from matplotlib import cm
-from pylab import *
-
+import pylab as p
+from scipy.stats import norm
 
 # from http://matplotlib.org/examples/pylab_examples/histogram_percent_demo.html
-@FuncFormatter
+@p.FuncFormatter
 def to_percent(y, position):
   # Ignore the passed in position. This has the effect of scaling the default
   # tick locations.
   s = str(100 * y)
 
   # The percent symbol needs escaping in latex
-  if matplotlib.rcParams['text.usetex'] == True:
+  if mpl.rcParams['text.usetex'] == True:
     return s + r'$\%$'
   else:
     return s + '%'
 
+
+def average(a):
+  return sum(a)/len(a)
 
 
 BARWIDTH = 0.7
@@ -142,3 +145,44 @@ def perfbars(files, annotations=[], thr=0.01, _show=False, output=None, _title=N
     savefig(output)
   if _show:
     show()
+
+
+
+def stability(paths, show=False, output=None):
+  # COLOR = "#548BE3"
+  COLOR = "#8CB8FF"
+  pltnum = len(paths)//2 + len(paths)%2
+  for i, fname in enumerate(paths):
+    with open(fname) as fd:
+      values = []
+      t = fd.readline().strip("#")
+      for l in fd.readlines():
+        values += [float(l.strip())]
+      p.subplot(pltnum, 2, i+1)
+      p.title(t)
+      avg = average(values)
+      percents = list(map(lambda x: avg/x-1, values))
+      n, bins, patches = p.hist(percents,
+        bins=50, normed=True,
+        histtype='bar', color=COLOR)
+
+      mu, sigma = norm.fit(percents)
+      y = p.normpdf(bins, mu, sigma)
+      p.plot(bins, y, 'r-', linewidth=3)
+      p.xlim(min(bins), max(bins))
+
+    ## remove y axis
+    yaxis = p.gca().yaxis
+    yaxis.set_major_locator(MaxNLocator(nbins=4, prune='lower'))
+    # yaxis.set_visible(False)
+
+    ## xaxis
+    xaxis = p.gca().xaxis
+    xaxis.set_major_formatter(to_percent)
+    xaxis.set_major_locator(MaxNLocator(nbins=5, prune='lower'))
+
+  p.tight_layout(pad=0.5)
+  if output:
+    p.savefig(output)
+  if show:
+    p.show()
