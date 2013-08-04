@@ -77,7 +77,7 @@ def enum_(it, offset=0):
 # ../../../../../compare2.py pgbench sdagp matrix blosc nginx sdag wordpress ffmpeg integer
 
 
-def perfbars(files, annotations=[], thr=0.01, show=False, output=None, title=None):
+def perfbars(files, annotations=[], thr=0.01, show=False, output=None, title=None, quiet=False):
   p.figure()
   num = len(files)
   assert num > 0, "please provide at least one path"
@@ -101,9 +101,9 @@ def perfbars(files, annotations=[], thr=0.01, show=False, output=None, title=Non
       for bar, v in zip(bars, values):
         bar += [v]
     else:
-      print("excluding", k)
+      if not quiet: print("excluding", k)
   for b in bars:
-    print(b, labels)
+    if not quiet: print(b, labels)
 
   ind = p.arange(len(labels))
 
@@ -114,7 +114,6 @@ def perfbars(files, annotations=[], thr=0.01, show=False, output=None, title=Non
 
   ## bars
   for i, bar in enumerate(bars):
-    print(annotations[i])
     p.barh(ind-BARWIDTH/num*i, bar, height=BARWIDTH/num, label=annotations[i], **styles[i]) #color=cm.gist_ncar(1-1/num*i), hatch=hatches[i], alpha=0.7)
 
   ## reverse legend
@@ -148,9 +147,10 @@ def perfbars(files, annotations=[], thr=0.01, show=False, output=None, title=Non
 
 
 
-def stability(paths, show=False, output=None):
+def stability(paths, show=False, output=None, annotations=None, aspect=2):
   # COLOR = "#548BE3"
   COLOR = "#8CB8FF"
+  figure = p.figure()
   pltnum = len(paths)//2 + len(paths)%2
   for i, fname in enumerate(paths):
     with open(fname) as fd:
@@ -159,7 +159,12 @@ def stability(paths, show=False, output=None):
       for l in fd.readlines():
         values += [float(l.strip())]
       p.subplot(pltnum, 2, i+1)
-      p.title(t)
+
+      ## title
+      if annotations:
+        p.title(annotations[i])
+      else:
+        p.title(t)
       avg = average(values)
       percents = list(map(lambda x: avg/x-1, values))
       n, bins, patches = p.hist(percents,
@@ -170,6 +175,17 @@ def stability(paths, show=False, output=None):
       y = p.normpdf(bins, mu, sigma)
       p.plot(bins, y, 'r-', linewidth=3)
       p.xlim(min(bins), max(bins))
+
+      ## set aspect
+      xmin, xmax = p.xlim()
+      ymin, ymax = p.ylim()
+      xr = xmax - xmin
+      yr = ymax - ymin
+      aspect = xr/yr/2
+      g = p.gca()
+      g.set_aspect(aspect)
+      # p.figaspect(aspect)
+
 
     ## remove y axis
     yaxis = p.gca().yaxis
@@ -183,6 +199,6 @@ def stability(paths, show=False, output=None):
 
   p.tight_layout(pad=0.5)
   if output:
-    p.savefig(output)
+    p.savefig(output, bbox_inches='tight')
   if show:
     p.show()
