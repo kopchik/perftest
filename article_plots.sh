@@ -11,3 +11,10 @@
 
 ./stability_plot.py -f ./results/fx/stability/{sleep_0/sdagp,sleep_3/sdagp} \
   -o ~/github/perf2013paper/pic/fx_stab_sleep3_vs_sleep_0.eps
+
+./stability_plot.py -f ./results/fx/stability/{sleep_0/sdagp,sleep_3/sdagp} \
+  -o ~/github/perf2013paper/pic/fx_stab_sleep3_vs_sleep_0.eps \
+  -a "sdagp (no interval)" "sdagp (3s interval)"
+
+
+./compare.py -f results/fx/stability/matrix_{best,worst} --show -t 0
