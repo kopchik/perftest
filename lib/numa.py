@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-from utils import read_val, read_int, str2list
-from utils import run
+from .utils import read_val, read_int, str2list
+from .utils import run
 import os
 
 PREFIX = "/sys/devices/system/"

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # http://lwn.net/Articles/421574/
 from useful.typecheck import TypeCheck
-from utils import run, cpu_count
-from perf import IPC
+from .utils import run, cpu_count
+# from .perf import IPC
 import signal
 import shlex
-import numa
+from . import numa
 import os
 
 # WARNING WARNING WARNING

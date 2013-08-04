@@ -1,16 +1,27 @@
 #!/usr/bin/env python3
-from libvmc import KVM, Bridged, Drive, Manager, main, __version__ as vmc_version
-from numa import OnlineCPUTopology
-from ipaddress import ip_address
-import cgroup
 
+if __package__ is None:
+  import sys, os
+  parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+  sys.path.insert(0, parent_dir)
+  import lib
+  __package__ = "lib"
+  del sys, os
+
+
+
+from libvmc import KVM, Bridged, Drive, Manager, main, __version__ as vmc_version
+from .numa import OnlineCPUTopology
+from ipaddress import ip_address
+import lib.cgroup as cgroup
 
 assert vmc_version >= 8, "vmc library is too old"
 numainfo = OnlineCPUTopology()
 CPUS = numainfo.cpus
 
 
-class CG(cgroup.PerfEvent, cgroup.CPUSet):
+# class CG(cgroup.PerfEvent, cgroup.CPUSet):
+class CG(cgroup.CPUSet):
   pass
 
 
@@ -56,7 +67,7 @@ class Template(KVM):
   cg    = None  # to be filled by mgr
   net   = [Bridged(ifname="template", model='e1000',
          mac="52:54:91:5E:38:BB", br="intbr")]
-  drives = [Drive("/home/sources/perftests/arch64_template.qcow2",
+  drives = [Drive("/home/sources/perfvms/template.qcow2",
             cache="unsafe")]
   auto  = False
 template = Template()
@@ -68,7 +79,7 @@ for i in CPUS:
     addr = ip_address("172.16.5.10")+i,
     net  = [Bridged(ifname="virt%s"%i, model='e1000',
            mac="52:54:91:5E:38:%02x"%i, br="intbr")],
-    drives = [Drive("/home/sources/perftests/arch64_perf%s.qcow2"%i,
+    drives = [Drive("/home/sources/perfvms/perf%s.qcow2"%i,
               cache="unsafe")])
 
 

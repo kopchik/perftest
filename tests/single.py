@@ -1,45 +1,32 @@
 #!/usr/bin/env python3
 
-from utils import run, retry, wait_idleness
 from logging import basicConfig, getLogger, DEBUG
 from resource import setrlimit, RLIMIT_NOFILE
-from perftool import get_useful_events
-from os.path import isdir
-from os import geteuid
-from virt import cgmgr
-from numa import *
+from os import makedirs, geteuid
+from os.path import isdir, exists
+
+from useful.mstring import s
+from tests.benches import benches as benchmarks
+from lib.utils import run, retry, wait_idleness
+from lib.perftool import get_useful_events
+from lib.qemu import cgmgr
+from lib.numa import *
 import argparse
 import rpyc
 import time
 import gc
 
-benchmarks = dict(
-matrix = "bencher.py -s 100000 -- /home/sources/kvmtests/benches/matrix 2048",
-integer = "bencher.py -s 100000 -- /home/sources/kvmtests/benches/int",
-pgbench = "sudo -u postgres pgbench -c 20 -s 10 -T 100000",
-nginx_static = "siege -c 100 -t 666h http://localhost/big_static_file",  # TODO: too CPU consuming,
-wordpress = "siege -c 100 -t 666h http://localhost/",
-ffmpeg = "bencher.py -s 100000 -- ffmpeg -i /home/sources/avatar_trailer.m2ts \
-            -threads 1 -t 10 -y -strict -2 -loglevel panic \
-            -acodec aac -aq 100 \
-            -vcodec libx264 -preset fast -crf 22 \
-            -f mp4 /dev/null",
-sdag  = "bencher.py -s 100000 -- /home/sources/test_SDAG/test_sdag -t 5 -q 1000 /home/sources/test_SDAG/dataset.dat",
-sdagp = "bencher.py -s 100000 -- /home/sources/test_SDAG/test_sdag+ -t 5 -q 1000 /home/sources/test_SDAG/dataset.dat",
-blosc = "/home/sources/kvmtests/benches/pyblosc.py -r 100000",
-)
 
 
 PERF_CMD = "sudo perf kvm stat -e {events} -x, -p {pid} -o {output} sleep {t}"
 BOOT_TIME = 15
-WARMUP_TIME = 30
-MEASURE_TIME = 180
-IDLENESS = 3
+WARMUP_TIME = 2
+MEASURE_TIME = 40
+IDLENESS = 40
 
 events = get_useful_events()
 events = ",".join(events)
 log = getLogger(__name__)
-
 
 
 def main():
@@ -56,28 +43,33 @@ def main():
   basicConfig(level=DEBUG)
   if args.debug:
     global WARMUP_TIME, MEASURE_TIME, IDLENESS
-    WARMUP_TIME /= 100
-    MEASURE_TIME = 3
-    IDLENESS = 50
+    WARMUP_TIME = 0.5
+    MEASURE_TIME = 1
+    IDLENESS *= 5
   assert isdir(args.prefix), "prefix should be a valid directory"
 
   gc.disable()
   if 'single' in args.tests:
-    single(args)
+    single(args.prefix)
   if 'double' in args.tests:
     double(args.prefix)
 
-def single(args):
+def single(prefix):
   with cgmgr:
     vm = cgmgr.start("0")
     time.sleep(BOOT_TIME)
     rpc = retry(rpyc.connect, args=(str(vm.addr),), kwargs={"port":6666}, retries=10)
     RPopen = rpc.root.Popen
+
+    outdir = s("${prefix}/single/")
+    if not exists(outdir):
+      makedirs(outdir)
+
     remains = len(benchmarks)
     for name, cmd in benchmarks.items():
       print("remains %s tests" % remains)
       remains -= 1
-      output = args.prefix + '/' + name
+      output = s("${prefix}/single/${name}")
       perf_cmd = PERF_CMD.format(pid=vm.pid, t=MEASURE_TIME, events=events, output=output)
 
       log.debug("waiting for idleness")
@@ -94,7 +86,7 @@ def single(args):
       gc.collect()
 
 
-def double(prefix, far=False):
+def double(prefix, far=True):
   topology = OnlineCPUTopology()
   if far:
     cpu, bgcpu = topology.cpus_no_ht[:2]
@@ -127,7 +119,7 @@ def double(prefix, far=False):
         print("remains %s tests" % remains)
         remains -= 1
 
-        outdir = prefix + '/' + bgname +'/'
+        outdir = s("${prefix}/double/${bgname}/")
         try: os.makedirs(outdir)
         except FileExistsError: pass
 

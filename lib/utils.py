@@ -96,7 +96,7 @@ def retry(f, args, kwargs, sleep=1, retries=20):
       log.info("retry: %s" % err)
     time.sleep(sleep)
   else:
-    import pdb; pdb.set_trace()
+    #import pdb; pdb.set_trace()
     raise Exception("ne shmogla")
 
 
@@ -118,3 +118,4 @@ def csv2dict(f):
 
 if __name__ == '__main__':
   print(str2list("1,2,7-9"))
+  print("idleness", check_idleness(t=3))
