@@ -20,16 +20,23 @@ def show_table():
     imgpath="/static/u2",
     title="Samsung Exynos-4412 (Odroid-U2 board)")]
   # fx
-  data = get_data(prefix="./results/fx/cc_auto/notp", sibling=True)
+  data = get_data(prefix="./results/fx", sibling=True)
   experiments += [dict(
     data=data,
     imgpath="/static/fx_near",
     title="AMD FX-8120 (sibling cores)")]
-  data = get_data(prefix="./results/fx/cc_auto/notp", sibling=False)
+  data = get_data(prefix="./results/fx", sibling=False)
   experiments += [dict(
     data=data,
     imgpath="/static/fx_far",
     title="AMD FX-8120 (distant cores)")]
+  # ux32vd
+  data = get_data(prefix="./results/ux32vd/")
+  experiments += [dict(
+      data=data,
+      imgpath="/static/ux32vd",
+      title="Intel i7-3517u@1.7GHz (asus ux32vd)",
+      annotation="""O_O""")]
   # panda
   data = get_data(prefix="./results/panda/notp/")
   experiments += [dict(
