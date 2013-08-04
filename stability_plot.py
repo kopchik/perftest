@@ -13,4 +13,6 @@ if __name__ == '__main__':
   parser.add_argument('-a', '--annotations', default=None, nargs='+')
   parser.add_argument('-f', '--files', nargs='+', required=True)
   args = parser.parse_args()
-  stability(args.files, show=args.show, output=args.output)
+  stability(args.files, show=args.show,
+            annotations=args.annotations,
+            output=args.output)
