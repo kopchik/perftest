@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from os import geteuid
-import useful.debug
+#import useful.debug
 import sys
 import gc
 

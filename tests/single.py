@@ -20,8 +20,8 @@ import gc
 
 PERF_CMD = "sudo perf kvm stat -e {events} -x, -p {pid} -o {output} sleep {t}"
 BOOT_TIME = 15
-WARMUP_TIME = 2
-MEASURE_TIME = 40
+WARMUP_TIME = 15
+MEASURE_TIME = 180
 IDLENESS = 40
 
 events = get_useful_events()
