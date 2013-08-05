@@ -77,7 +77,7 @@ def enum_(it, offset=0):
 # ../../../../../compare2.py pgbench sdagp matrix blosc nginx sdag wordpress ffmpeg integer
 
 
-def perfbars(files, annotations=[], thr=0.01, show=False, output=None, title=None, quiet=False):
+def perfbars(files, annotations=[], thr=0.01, show=False, output=None, title=None, quiet=False, key_order=None):
   p.figure()
   num = len(files)
   assert num > 0, "please provide at least one path"
@@ -88,10 +88,15 @@ def perfbars(files, annotations=[], thr=0.01, show=False, output=None, title=Non
   data = [csv2dict(f) for f in files]
   bars = [[] for _ in data]
   labels = []
-  key_order = sorted(data[0])
 
+  if key_order:
+    print("WITH KEY_ORDER THRESHOLD IS ALWAYS 0")
+    thr = 0.0
+  if not key_order:
+    key_order = sorted(data[0])
+  if 'cycles' in key_order:
+    key_order.remove('cycles')
 
-  key_order.remove('cycles')
   for k in key_order:
     values = []
     for datum, bar in zip(data, bars):

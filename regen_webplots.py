@@ -32,7 +32,8 @@ def regen(datadir, outputdir, sibling=True, quiet=True):
       if sibling: double = s("${datadir}/double/${bg}/${fg}")
       else:       double = s("${datadir}/double_far/${bg}/${fg}")
       # print("perf bars params:", out, single, double)
-      perfbars([single, double], output=out, quiet=True)
+      annotations = [fg+" alone", fg+"+"+bg]
+      perfbars([single, double], output=out, annotations=annotations, quiet=True)
 
 if __name__ == '__main__':
   print("u2")

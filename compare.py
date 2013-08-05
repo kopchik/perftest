@@ -10,6 +10,7 @@ if __name__ == '__main__':
   parser.add_argument('--title', default=None)
   parser.add_argument('-a', '--annotations', default=None, nargs='+')
   parser.add_argument('-f', '--files', nargs='+', required=True)
+  parser.add_argument('-k', '--key-order', nargs='+', default=False)
 
   args = parser.parse_args()
   print(args)
@@ -18,4 +19,5 @@ if __name__ == '__main__':
            thr=args.threshold,
            title=args.title,
            show=args.show,
+           key_order=args.key_order,
            output=args.output)
