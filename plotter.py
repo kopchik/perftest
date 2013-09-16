@@ -39,18 +39,27 @@ def average(a):
 
 
 BARWIDTH = 0.7
+# styles = [
+#   dict(hatch="/", color="#25C600"),
+#   # dict(hatch="/", ls="dashed", color="#25C600", alpha=0.6),  # green
+#   dict(color="#2E9AFE"),  # blue
+#   dict(ls="dotted", color="#F78181"),  # red
+#   dict(color="#E6E6E6"),  # grey
+#   dict(hatch="\\", color="#2E9AFE"),
+#   dict(hatch="x", color="#40FF00"),
+#   dict(hatch='\\|/', color="#FACC2E"),
+#   dict(hatch="|+", color="white"),
+#   dict(hatch="/", color="#FA8258"), # chart orange
+# ]
 styles = [
-  dict(hatch="/", color="#25C600"),
-  # dict(hatch="/", ls="dashed", color="#25C600", alpha=0.6),  # green
-  dict(color="#2E9AFE"),  # blue
-  dict(ls="dotted", color="#F78181"),  # red
-  dict(color="#E6E6E6"),  # grey
-  dict(hatch="\\", color="#2E9AFE"),
-  dict(hatch="x", color="#40FF00"),
-  dict(hatch='\\|/', color="#FACC2E"),
-  dict(hatch="|+", color="white"),
-  dict(hatch="/", color="#FA8258"), # chart orange
+  dict(color="#424242"),
+  dict(color="#6E6E6E"),
+  dict(color="#BDBDBD"),
+  dict(color="#E6E6E6"),
+  dict(color="#FAFAFA"),
+  # dict(color=""),
 ]
+
 styles = [style for style, _ in zip(cycle(styles), range(10))]
 
 def enum_(it, offset=0):
@@ -97,7 +106,7 @@ def perfbars(files, annotations=[], thr=0.01, show=False, output=None, title=Non
   if 'cycles' in key_order:
     key_order.remove('cycles')
 
-  for k in key_order:
+  for k in reversed(key_order):
     values = []
     for datum, bar in zip(data, bars):
       values += [ datum[k] / datum['cycles'] ]
