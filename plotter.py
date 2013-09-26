@@ -20,6 +20,9 @@ from matplotlib import cm
 import pylab as p
 from scipy.stats import norm
 
+BARWIDTH = 0.8
+
+
 # from http://matplotlib.org/examples/pylab_examples/histogram_percent_demo.html
 @p.FuncFormatter
 def to_percent(y, position):
@@ -33,12 +36,10 @@ def to_percent(y, position):
   else:
     return s + '%'
 
-
 def average(a):
   return sum(a)/len(a)
 
 
-BARWIDTH = 0.7
 # styles = [
 #   dict(hatch="/", color="#25C600"),
 #   # dict(hatch="/", ls="dashed", color="#25C600", alpha=0.6),  # green
@@ -120,6 +121,7 @@ def perfbars(files, annotations=[], thr=0.01, show=False, output=None, title=Non
     if not quiet: print(b, labels)
 
   ind = p.arange(len(labels))
+  print("ind", ind)
 
   if title:
     p.title(title, weight="semibold")
@@ -128,7 +130,10 @@ def perfbars(files, annotations=[], thr=0.01, show=False, output=None, title=Non
 
   ## bars
   for i, bar in enumerate(bars):
-    p.barh(ind-BARWIDTH/num*i, bar, height=BARWIDTH/num, label=annotations[i], **styles[i]) #color=cm.gist_ncar(1-1/num*i), hatch=hatches[i], alpha=0.7)
+    p.barh(ind+BARWIDTH*(num-2*i-2)/(2*num), bar, height=BARWIDTH/num, label=annotations[i],
+    #**styles[i]) #
+    color=cm.Greys_r((i+0.4)/len(bars)*0.8))
+    #color=cm.gist_ncar(1-1/num*i), hatch=hatches[i], alpha=0.7)
 
   ## reverse legend
   # handles, labels = gca().get_legend_handles_labels()
