@@ -124,6 +124,7 @@ def perfbars(files, annotations=[], thr=0.01, show=False, output=None, title=Non
   print("ind", ind)
 
   if title:
+    title=title.replace(r"\n", "\n")
     p.title(title, weight="semibold")
   ## title
   # title(" | ".join(map(basename, fnames)))

@@ -2,8 +2,8 @@
 ./compare.py -p ./results/u2/ -b sdagp -f ffmpeg  --show -o ~/github/perf2013paper/pic/sdagp_ffmpeg.eps
 ./compare.py -p ./results/u2/ -b nginx -f matrix  --show -o ~/github/perf2013paper/pic/nginx_matrix.eps
 ./compare.py -p ./results/u2/ -b matrix -f sdag  --show -o ~/github/perf2013paper/pic/matrix_sdag.eps
-./compare.py -f results/u2/{single/ffmpeg,double/integer/ffmpeg} --show -t 0.07 -o ~/github/perf2013paper/pic/u2_integer_ffmpeg.eps --title "Exinos 4412" -a "ffmpeg alone" "ffmpeg+integer"
-./compare.py -f results/u2/{single/pgbench,double/sdagp/pgbench} --show -t 0.03 -o ~/github/perf2013paper/pic/u2_pgbench+sdagp.eps --title "Exinos 4412" -a "pgbench alone" "pgbench+sdagp"
+./compare.py -f results/u2/{single/ffmpeg,double/integer/ffmpeg} --show -t 0.07 -o ~/github/perf2013paper/pic/u2_integer_ffmpeg.eps --title "Samsung Exynos 4412" -a "ffmpeg alone" "ffmpeg+integer"
+./compare.py -f results/u2/{single/pgbench,double/sdagp/pgbench} --show -t 0.03 -o ~/github/perf2013paper/pic/u2_pgbench+sdagp.pdf --title "Samsung Exynos 4412" -a "pgbench alone" "pgbench+sdagp"
 
 
 # FX

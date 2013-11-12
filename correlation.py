@@ -24,7 +24,7 @@ mean  = lambda l: sum(l)/len(l)
 gmean = lambda l: pow(reduce(mul, l),1/len(l))
 
 def err(l1, l2):
-  return sum(abs(1-v1/v2) for v1, v2 in zip(l1,l2))
+  return sum(abs(1-v1/v2) for v1, v2 in zip(l1,l2))/len(l1)
 
 def pivot(tbl):
   tbl2 = OrderedDict()
@@ -39,25 +39,27 @@ def pivot(tbl):
 def printbl(tbl):
   errtbl = error(tbl)
   tpl = "{:>7}"
-  tplf = "{:>7.2f}"
+  tplf = "{:>7.0%}"
   n = int(sqrt(len(tbl)))
   print(tpl.format(" "), end=" ")
   [print(tpl.format(k), end="") for k in tbl]; print()
   for t1 in tbl:
     print(tpl.format(t1), end=" ")
+    errs = 0.0
     for t2 in tbl:
       v = errtbl[t1,t2]
-      if v > 99:
+      errs += v
+      if v > 3:
         v = ">"
         #print("{:>6}".format("-"), end=" ")
-        cprint(tpl.format(">99"), end="")
+        cprint(tpl.format(" "), end="")
       else:
         color = "white"
-        if   v < 2: color = "green"
-        elif v < 5: color = "yellow"
+        if   v < 1: color = "green"
+        elif v < 2: color = "yellow"
         # else:       color = "white"
         cprint(tplf.format(v), color, end="")
-    print()
+    print(" ", "sum={:>5.0%}".format(errs))
   print()
 
 
@@ -68,7 +70,7 @@ def error(tbl):
   return errtbl
 
 sensitivity = pivot(interference)
-cprint("-=interference=-", "green")
+cprint("INTERFERENCE", "green")
 printbl(interference)
 cprint("SENSITIVITY", "green")
 printbl(sensitivity)

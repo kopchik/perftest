@@ -1,15 +1,25 @@
 #!/usr/bin/env python3
 from lib.utils import csv2dict
 from collections import defaultdict, OrderedDict
+from scipy.stats.stats import pearsonr, linregress
 from operator import itemgetter
+from itertools import product
+import pylab as p
 import sys
 import os
+
 
 brutality = defaultdict(int)
 sensitivity = defaultdict(int)
 
 path_single = sys.argv[1] + '/'
 path_double = sys.argv[2] + '/'
+
+def gettotal(hpc1, hpc2, params):
+  total = 0
+  for p in params:
+    total += hpc1[p] + hpc2[p]
+  return total
 
 def sorted_dict(d):
   return sorted(d.items(), key=itemgetter(1), reverse=True)
@@ -35,35 +45,30 @@ def print_double(data1, data2):
     print(line)
 
 single = {}
-singlehpc = {}
 for name in os.listdir(path_single):
-  p = csv2dict(path_single+name)
-  inps = p['instructions'] / p['cycles']
+  hpc = csv2dict(path_single+name)
+  inps = hpc['instructions'] / hpc['cycles']
   single[name] = inps
-  singlehpc[name] = p
-
 
 summary = 0
 double = {}
-doublehpc = {}
 print("~           &", " &".join(sorted(single)), "\\\\")
 for bg in sorted(single):
   print("{:12}".format(bg), end='')
   for fg in sorted(single):
-    p = csv2dict(path_double+bg+'/'+fg)
-    doublehpc[bg,fg] = p
-    inps = p['instructions'] / p['cycles']
+    hpc = csv2dict(path_double+bg+'/'+fg)
+    inps = hpc['instructions'] / hpc['cycles']
     ratio = inps/single[fg]
     double[bg,fg] = ratio
     percents = (1 - ratio)* 100
-    if percents < 0:
-        print("& \\green {:4.1f}".format(percents), end=' ')
-    elif percents > 15:
-        print("& \\red {:4.1f}".format(percents), end=' ')
-    elif percents > 10:
-        print("& \\orange {:4.1f}".format(percents), end=' ')
-    else:
-        print("& {:4.1f}".format(percents), end=' ')
+    # if percents < 0:
+    #     print("& \\green {:4.1f}".format(percents), end=' ')
+    # elif percents > 15:
+    #     print("& \\red {:4.1f}".format(percents), end=' ')
+    # elif percents > 10:
+    #     print("& \\orange {:4.1f}".format(percents), end=' ')
+    # else:
+    print("{:4.1f},".format(percents), end=' ')
     summary += percents
     brutality[bg] += percents
     sensitivity[fg] += percents
@@ -86,53 +91,85 @@ print_double(brutality, sensitivity)
 #   v = sensitivity[k]
 #   print(k, fmt(v))
 
+print("\n================\n")
+
 def norm(d):
   cycles = d['cycles']
   for k,v in d.items():
     d[k] = v/cycles
   return d
 
-from scipy.stats.stats import pearsonr
+class hpcs:
+  single = {}
+  double = {}
+
+for name in os.listdir(path_single):
+  hpc = csv2dict(path_single+name)
+  hpc = norm(hpc)
+  hpcs.single[name] = norm(hpc)
+
+for bg in sorted(single):
+  for fg in sorted(single):
+    hpc = csv2dict(path_double+bg+'/'+fg)
+    hpc = norm(hpc)
+    hpcs.double[bg,fg] = hpc
+
+
+
 correlation = {}
 pvalue = {}
-for counter in singlehpc['sdag']:
+for counter in hpcs.single['sdag']:
   bruts = []
   stats = []
   for (bname, brut) in sorted_dict(sensitivity):
     bruts += [brut]
-    stats += [singlehpc[bname][counter]]
-  cor, p = pearsonr(bruts, stats)
+    stats += [hpcs.single[bname][counter]]
+  cor, pv = pearsonr(bruts, stats)
 
-  if p < 0.05:
+  if pv < 0.05:
     correlation[counter] = cor
-    pvalue[counter] = p
+    pvalue[counter] = pv
 for cnt, cor in sorted_dict(correlation):
   print("{cnt:22} & {cor: 2.3f} & {pval:2.1%} \\\ \hline".format(cnt=cnt, cor=cor, pval=pvalue[cnt]))
 
-from collections import defaultdict
-from itertools import product
-degradations = []
+
 counters = defaultdict(list)
 
-print()
-for t2, t1 in product(singlehpc, repeat=2):
+plotdata = {}
+degradations = []
+for t2, t1 in product(sorted(hpcs.single), repeat=2):
   # print(t1, t2)
-  shpc1 = norm(singlehpc[t1])
-  shpc2 = norm(singlehpc[t2])
-  dhpc1 = norm(doublehpc[t1,t2])
-  dhpc2 = norm(doublehpc[t2,t1])
+  s1 = hpcs.single[t1]
+  s2 = hpcs.single[t2]
+  d1 = hpcs.double[t1,t2]
+  d2 = hpcs.double[t2,t1]
 
-  naive = shpc1['instructions'] + shpc2['instructions']
-  actual  = dhpc1['instructions'] + dhpc2['instructions']
-  degr = actual/naive
+  naive   = s1['instructions'] + s2['instructions']
+  actual  = d1['instructions'] + d2['instructions']
+  degr = actual / naive
   degradations += [degr]
 
-  for k, v1 in shpc1.items():
-    v2 = shpc2[k]
+  for k, v1 in s1.items():
+    v2 = s2[k]
     total = v1 + v2
     counters[k] += [total]
 
+
+  # total = gettotal(shpc1, shpc2, ['LLC-stores', 'LLC-loads'])
+  total = gettotal(s1, s2, ['instructions'])
+  plotdata[total] = degr
+
 for counter,v in counters.items():
-  cor, p = pearsonr(v, degradations)
-  if p < 0.1:
-    print ("{:25} {: .3f} {:2.1%}".format(counter, cor, p*100))
+  cor, pv = pearsonr(v, degradations)
+  if pv < 0.1:
+    print ("{:25} {: .3f} {:2.1%}".format(counter, cor, pv*100))
+
+
+if plotdata:
+  X = sorted(list(plotdata.keys()))
+  Y = [plotdata[x] for x in X]
+  print(linregress(X,Y))
+  p.xlabel("counters")
+  p.ylabel("degradatation")
+  p.plot(X, Y, '-o')
+  p.show()
