@@ -2,7 +2,7 @@
 
 """ Actung! Quick`n`Dirty code, do not use in production
 """
-from .perftool import cgstat
+from .perftool import cgstat, NotCountedError
 from .utils import retry
 
 from useful.run import sudo, sudo_

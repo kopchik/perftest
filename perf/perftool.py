@@ -15,6 +15,9 @@ import shlex
 import os
 
 
+class NotCountedError(Exception):
+  pass
+
 counters_cmd = """perf list %s --no-pager |  grep -v 'List of' | awk '{print $1}' | grep -v '^$'"""
 NOT_SUPPORTED = '<not supported>'
 NOT_COUNTED = '<not counted>'
@@ -69,7 +72,7 @@ def get_events():
 
 def stat(pid=None, events=[], time=0, perf="perf", guest=False, extra=""):
   # parse input
-  assert events, and time
+  assert events and time
   CMD = "{perf} kvm" if guest else "{perf}"
   CMD += " stat -e {events} --log-fd {fd} -x, {extra} sleep {time}"
   if pid: extra += " -p {pid}"
