@@ -2,11 +2,13 @@
 
 """ Actung! Quick`n`Dirty code, do not use in production
 """
+from .perftool import cgstat
+from .utils import retry
+
 from useful.run import sudo, sudo_
 from useful.mstring import s
-from perftool import cgstat
 from libvmc import gen_mac
-from utils import retry
+
 from os.path import exists
 import rpyc
 import os
