@@ -77,6 +77,14 @@ class LXC:
                         kwargs={"port":6666}, retries=10)
     return self.rpc.root.Popen(*args, **kwargs)
 
-  def stat(self, outfile):
-    from config import MEASURE_TIME, events
-    cgstat(path="lxc/"+self.name, cpus=self.cpus, events=events, t=MEASURE_TIME, out=outfile)
+  def ipcstat(self, time):
+    try:
+      r = cgstat(path="lxc/"+self.name, cpus=self.cpus, events=['instructions', 'cycles'], time=time)
+      ins = r['instructions']
+      cycles = r['cycles']
+    except Exception as err:
+      raise NotCountedError(err)
+    if ins == 0 or cycles == 0:
+      raise NotCountedError
+    return ins, cycles
+  stat = ipcstat
