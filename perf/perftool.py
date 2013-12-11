@@ -7,6 +7,7 @@ from .utils import memoized
 
 from collections import OrderedDict
 from subprocess import check_call
+from socket import socketpair
 from signal import SIGTERM
 from pprint import pprint
 from subprocess import *
@@ -85,7 +86,7 @@ def stat(pid=None, events=[], time=0, perf="perf", guest=False, extra=""):
   # parse output of perf
   r = {}
   for s in result.splitlines():
-    rawcnt,_,ev = s.split(',')
+    rawcnt,*_,ev = s.split(',')
     if rawcnt == '<not counted>':
       raise NotCountedError
     r[ev] = int(rawcnt)
