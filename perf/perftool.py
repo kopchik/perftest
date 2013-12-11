@@ -24,6 +24,10 @@ os.environ["PERF_PAGER"]="cat"
 log = Log("perftool")
 BUF_SIZE = 65535
 
+def osexec(cmd):
+  cmd = shlex.split(cmd)
+  os.execlp(cmd[0], *cmd)
+
 
 def _get_events(hw=True, sw=True, cache=True, tp=True):
   selector = ""
@@ -42,7 +46,8 @@ def _get_events(hw=True, sw=True, cache=True, tp=True):
 def get_events():
   """select counters that are the most useful for our purposes"""
 
-  bad = "kvmmmu:kvm_mmu_get_page,kvmmmu:kvm_mmu_sync_page,kvmmmu:kvm_mmu_unsync_page,kvmmmu:kvm_mmu_prepare_zap_page".split(',')
+  bad = "kvmmmu:kvm_mmu_get_page,kvmmmu:kvm_mmu_sync_page," \
+        "kvmmmu:kvm_mmu_unsync_page,kvmmmu:kvm_mmu_prepare_zap_page".split(',')
   result =  _get_events(tp=False)
   result = ['cycles' if x=='cpu-cycles' else x for x in result]  # replace cpu-cycles with cycles
   #tpevents = get_events(tp=True)
@@ -69,12 +74,7 @@ def get_events():
   return clean
 
 
-def osexec(cmd):
-  cmd = shlex.split(cmd)
-  os.execlp(cmd[0], *cmd)
-
-
-def stat(pid, events, t, ann=None, norm=False, guest=False):
+def oldstat(pid, events, t, ann=None, norm=False, guest=False):
   evcmd = ",".join(events)
   if guest:
     cmd = "sudo perf kvm stat"
@@ -107,14 +107,34 @@ def stat(pid, events, t, ann=None, norm=False, guest=False):
   return PerfData(raw, ann=ann, norm=norm)
 
 
+def stat(pid=None, events=[], time=0, perf="perf", guest=False, extra=""):
+  # parse input
+  assert events, and time
+  CMD = "{perf} kvm" if guest else "{perf}"
+  CMD += " stat -e {events} --log-fd {fd} -x, {extra} sleep {time}"
+  if pid: extra += " -p {pid}"
+  # prepare cmd and call it
+  read, write = socketpair()
+  cmd = CMD.format(perf=perf, pid=pid, events=",".join(events), \
+                   fd=write.fileno(), time=time, extra=extra)
+  check_call(shlex.split(cmd), pass_fds=[write.fileno()])  # TODO: buf overflow??
+  result = read.recv(100000).decode()
+  # parse output of perf
+  r = {}
+  for s in result.splitlines():
+    rawcnt,_,ev = s.split(',')
+    if rawcnt == '<not counted>':
+      raise NotCountedError
+    r[ev] = int(rawcnt)
+  return r
+
 def kvmstat(*args, **kwargs):
   return stat(*args, guest=True, **kwargs)
 
-
-def cgstat(path, events, cpus, t, out):
-  CMD = "perf stat -C {cpus} -e {events} -G {path} -o {output} -x, -- sleep {time}"
-  cmd = CMD.format(path=path, cpus=",".join(map(lambda x: str(x), cpus)), events=",".join(events), time=t, output=out)
-  p = check_call(shlex.split(cmd))
+def cgstat(*args, path=None, cpus=None, **kwargs):
+  assert path and cpus
+  extra = "-C {cpus} -G {path}".format(path=path, cpus=",".join(map(lambda x: str(x), cpus)))
+  return stat(*args, extra=extra, **kwargs)
 
 
 class PerfData(OrderedDict):
