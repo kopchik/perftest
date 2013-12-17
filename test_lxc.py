@@ -31,7 +31,7 @@ for x in range(4):
   lxc.create()
   lxc.start()
 
-cgstat(path="lxc/"+lxcs[0].name, events=['cycles'], t=1, out="/tmp/out")
+cgstat(path="lxc/"+lxcs[0].name, cpus=[0,1,2,3], events=['cycles'], t=1, out="/tmp/out")
 
 # print("sleeping for a while...")
 # time.sleep(1)
