@@ -1,0 +1,13 @@
+#!/bin/sh
+sudo ./lib/qemu.py kill all
+sleep 3
+/home/sources/perfvms/regen_img.sh
+sync
+sudo ./run_tests.py single --prefix ./results/ux32vd/ -t double
+
+sudo ./lib/qemu.py kill all
+sleep 3
+/home/sources/perfvms/regen_img.sh
+sync
+sudo ./run_tests.py single --prefix ./results/ux32vd/ -t single
+

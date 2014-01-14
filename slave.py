@@ -46,6 +46,6 @@ if __name__ == "__main__":
   parser.add_argument('--port', type=int, default=6666, help="port to listen")
   args = parser.parse_args()
   print(args)
-  server = ThreadedServer(MyService, port=args.port,reuse_addr=True,
+  server = ThreadedServer(MyService, port=args.port, reuse_addr=True,
                           protocol_config={"allow_all_attrs":True})
   server.start()
