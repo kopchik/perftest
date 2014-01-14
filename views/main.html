@@ -52,7 +52,6 @@
     <hr class="hr-bar">
     <div id="bar">
       <a href="#">Odroid-U2</a>
-      <a href="#">PandaBoard-ES</a>
       <a href="#">AMD FX-8120</a>
     </div>
     <hr class="hr-bar">
@@ -79,13 +78,27 @@
         Cores that share the most resources are called sibling cores.
         Cores sharing the least -- distant cores.
         Our ARM boards have uniform cores and therefore they all equal.
-
+      </div>
+      <h3>Sources</h3>
+      <div>
+        The sources of all scripts are available
+        <a href="https://github.com/kopchik/perftest/">here</a>.
       </div>
       %for experiment in experiments:
         <h1>{{experiment['title']}}</h1>
         {{experiment.get('annotation','')}}<br><br>
         %render_table(experiment['data'], experiment['imgpath'])
       %end
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
     </div>
   </body>
 </html>
