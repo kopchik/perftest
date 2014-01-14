@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from bottle import abort, run, mount, request, load_app
+from bottle import abort, run, mount, request, load_app, default_app as app
 from bottle import static_file, view
 from bottle import get, MakoTemplate
 from lib.utils import csv2dict
@@ -30,21 +30,21 @@ def show_table():
     data=data,
     imgpath="/static/fx_far",
     title="AMD FX-8120 (distant cores)")]
-  # ux32vd
-  data = get_data(prefix="./results/ux32vd/")
-  experiments += [dict(
-      data=data,
-      imgpath="/static/ux32vd",
-      title="Intel i7-3517u@1.7GHz (asus ux32vd)",
-      annotation="""O_O""")]
-  # panda
-  data = get_data(prefix="./results/panda/notp/")
-  experiments += [dict(
-      data=data,
-      imgpath="/static/panda",
-      title="TI OMAP 4460 (PandaBoard-ES)",
-      annotation="""The hardware performance counters didn't work
-      well on this board. This data cannot be trust.""")]
+  ## ux32vd
+  #data = get_data(prefix="./results/ux32vd/")
+  #experiments += [dict(
+  #    data=data,
+  #    imgpath="/static/ux32vd",
+  #    title="Intel i7-3517u@1.7GHz (asus ux32vd)",
+  #    annotation="""O_O""")]
+  ## panda
+  #data = get_data(prefix="./results/panda/notp/")
+  #experiments += [dict(
+  #    data=data,
+  #    imgpath="/static/panda",
+  #    title="TI OMAP 4460 (PandaBoard-ES)",
+  #    annotation="""The hardware performance counters didn't work
+  #    well on this board. This data cannot be trust.""")]
 
   return dict(experiments=experiments)
 
@@ -77,4 +77,4 @@ def get_degr(reference, sample):
 
 
 if __name__ == '__main__':
-  run(debug=True, interval=0.1, host='0.0.0.0', port=8080, reloader=True)
+  run(debug=True, server='gunicorn', interval=0.1, host='localhost', port=8080, reloader=True)
