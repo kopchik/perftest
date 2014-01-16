@@ -1,21 +1,17 @@
 from socket import gethostname
 from useful.mystruct import Struct
+from useful.log import log
 
-# LXC
+log = Log("config")
 HOSTNAME = gethostname()
-if HOSTNAME == "ux32vd":
-  LXC_PREFIX = "/mnt/btrfs/"
-elif HOSTNAME in ["odroid", "u2"]:
-  LXC_PREFIX = "/home/"
-elif HOSTNAME == 'p1':
-  LXC_PREFIX = "/mnt/btrfs/"
-else:
-  raise Exception("Unknown host. Please add configuration for it.")
-
-
 WARMUP_TIME = 15
 IDLENESS = 45
 MEASURE_TIME = 180
+
+
+######################
+# HOST-SPECIFIC CFGs #
+######################
 
 configs = {}
 # FX
@@ -27,13 +23,22 @@ configs["fx"] = Struct(
   )
 
 # U2
-configs["odroid"] = Struct(
+configs["u2"] = Struct(
   name = "u2",
   virt = "lxc",
   siblings = False,
   results_path = "./results/fx/u2/"
+  lxc_prefix = "/home/"
   )
 
+if HOSTNAME not in configs:
+  raise Exception("Unknown host. Please configure it first in config.py.")
+config = configs[HOSTNAME]
+
+
+##############
+# BENCHMARKS #
+##############
 
 basis = dict(
   pgbench = "sudo -u postgres pgbench -c 20 -s 10 -T 100000",
@@ -55,3 +60,11 @@ basis = dict(
 validate = dict(
   bitrix = "siege -c 100 -t 666h http://localhost/",
 )
+
+
+def enable_debug():
+  global WARMUP_TIME, MEASURE_TIME, IDLENESS
+  log.critical("debug mode enabled")
+  WARMUP_TIME = 0
+  MEASURE_TIME = 0.5
+  IDLENESS = 70
