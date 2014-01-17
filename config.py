@@ -1,6 +1,14 @@
-from socket import gethostname
+#!/usr/bin/env python3
+
 from useful.mystruct import Struct
 from useful.log import log
+
+from socket import gethostname
+from os import geteuid
+from sys import exit
+
+if geteuid() != 0:
+  exit("you need root to run this scrips")
 
 log = Log("config")
 HOSTNAME = gethostname()
@@ -13,27 +21,37 @@ MEASURE_TIME = 180
 # HOST-SPECIFIC CFGs #
 ######################
 
-configs = {}
-# FX
-configs["fx"] = Struct(
-  name = "fx",
-  virt = "qemu",
-  siblings = True,
-  results_path = "./results/fx/cc_auto/notp/"
-  )
+VMS = []
+if HOSTNAME == 'fx':
+  SIBLINGS = True,
+  RESULTS = "./results/fx/cc_auto/notp/"
 
-# U2
-configs["u2"] = Struct(
-  name = "u2",
-  virt = "lxc",
-  siblings = False,
-  results_path = "./results/fx/u2/"
-  lxc_prefix = "/home/"
-  )
+  for i in CPUS:
+  vm = Template(
+    name = str(i),
+    cpus = [i],
+    addr = ip_address("172.16.5.10")+i,
+    net  = [Bridged(ifname="virt%s"%i, model='e1000',
+           mac="52:54:91:5E:38:%02x"%i, br="intbr")],
+    drives = [Drive("/home/sources/perfvms/perf%s.qcow2"%i,
+              cache="unsafe")])
+  vm.kill()
+  VMS.append(vm)
 
-if HOSTNAME not in configs:
+elif HOSTNAME == 'u2':
+  from lxc import LXC
+  SIBLINGS = False,
+  RESULTS = "./results/fx/u2/"
+  LXC_PREFIX = "/home/"
+  for x in range(4):
+    ip = str(IPv4Address("172.16.5.10")+x)
+    name = "perf%s" % x
+    lxc = LXC(name=name, root=LXC_PREFIX+name, tpl=LXC_PREFIX+"/perftemplate/",
+              addr=ip, gw="172.16.5.1", cpus=[x])
+    lxc.destroy()
+    VMS.append(lxc)
+else:
   raise Exception("Unknown host. Please configure it first in config.py.")
-config = configs[HOSTNAME]
 
 
 ##############
