@@ -1,15 +1,5 @@
 #!/usr/bin/env python3
 
-if __package__ is None:
-  import sys, os
-  parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-  sys.path.insert(0, parent_dir)
-  import lib
-  __package__ = "lib"
-  del sys, os
-
-
-
 from libvmc import KVM, Bridged, Drive, Manager, main, __version__ as vmc_version
 from .numa import OnlineCPUTopology
 from ipaddress import ip_address
@@ -56,31 +46,28 @@ cgmgr = CGManager(CPUS)
 
 
 class Template(KVM):
-  mgr   = cgmgr
-  #cmd   = "qemu-kvm -curses"
-  cmd   = "qemu-system-x86_64 -enable-kvm -curses"
-  #cmd   = "/home/sources/aur-mirror/kvm-git/src/qemu-kvm/x86_64-softmmu/qemu-system-x86_64 -curses"
-  #cmd   = "/home/sources/qemu-new/x86_64-softmmu/qemu-system-x86_64 -curses"
-  name  = "template"
-  mem   = 1024
-  rpc   = None  # to be filled where rpc.connect is called
-  cg    = None  # to be filled by mgr
-  net   = [Bridged(ifname="template", model='e1000',
+  mgr    = cgmgr
+  #cmd    = "qemu-kvm -curses"
+  cmd    = "qemu-system-x86_64 -enable-kvm -curses"
+  #cmd    = "/home/sources/aur-mirror/kvm-git/src/qemu-kvm/x86_64-softmmu/qemu-system-x86_64 -curses"
+  #cmd    = "/home/sources/qemu-new/x86_64-softmmu/qemu-system-x86_64 -curses"
+  name   = "template"
+  mem    = 1024
+  rpc    = None  # to be filled where rpc.connect is called
+  cg     = None  # to be filled by mgr
+  net    = [Bridged(ifname="template", model='e1000',
          mac="52:54:91:5E:38:BB", br="intbr")]
   drives = [Drive("/home/sources/perfvms/template.qcow2",
             cache="unsafe")]
-  auto  = False
+  auto   = False
+  rpc    = None
+
+  def Popen(self, *args, **kwargs):
+    if not self.rpc:
+      self.rpc = retry(rpyc.connect, args=(str(vm.addr),), \
+                        kwargs={"port":6666}, retries=10)
+    return rpc.root.Popen(*args, kwargs)
 template = Template()
-
-
-for i in CPUS:
-  Template(
-    name = str(i),
-    addr = ip_address("172.16.5.10")+i,
-    net  = [Bridged(ifname="virt%s"%i, model='e1000',
-           mac="52:54:91:5E:38:%02x"%i, br="intbr")],
-    drives = [Drive("/home/sources/perfvms/perf%s.qcow2"%i,
-              cache="unsafe")])
 
 
 # if script is used stand-alone...
