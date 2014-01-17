@@ -37,6 +37,7 @@ class LXC:
     self.mac  = gen_mac()
     self.started = False
     self.cpus = cpus
+    self.rpc  = None
 
   def create(self):
     if os.path.exists(self.root):
@@ -64,3 +65,9 @@ class LXC:
 
   def stop(self, t=10):
     sudo_(s("lxc-shutdown -n ${self.name} -t ${t}"))
+
+  def Popen(self, *args, **kwargs):
+    if not self.rpc:
+      self.rpc = retry(rpyc.connect, args=(str(vm.addr),), \
+                        kwargs={"port":6666}, retries=10)
+    return rpc.root.Popen(*args, kwargs)
