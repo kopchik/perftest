@@ -1,31 +1,19 @@
 #!/usr/bin/env python3
 
 from logging import basicConfig, getLogger, DEBUG
-from resource import setrlimit, RLIMIT_NOFILE
-from os import makedirs, geteuid
 from os.path import isdir, exists
-
-from useful.mstring import s
-from tests.benches import benches as benchmarks
-from lib.utils import run, retry, wait_idleness
-from lib.perftool import get_useful_events
-from lib.qemu import cgmgr
-from lib.numa import *
+from os import makedirs
 import argparse
-import rpyc
 import time
 import gc
 
+from useful.mstring import s
+from utils import run, retry, wait_idleness
 
+from config import WARMUP_TIME, MEASURE_TIME, IDLENESS, BOOT_TIME
+from config import VMS
+from config import basis
 
-PERF_CMD = "sudo perf kvm stat -e {events} -x, -p {pid} -o {output} sleep {t}"
-BOOT_TIME = 15
-WARMUP_TIME = 15
-MEASURE_TIME = 180
-IDLENESS = 40
-
-events = get_useful_events()
-events = ",".join(events)
 log = getLogger(__name__)
 
 
@@ -37,15 +25,7 @@ def main():
   args = parser.parse_args()
 
   log.info(args)
-  if geteuid() != 0:
-    sys.exit("you need root to run this scrips")
-  setrlimit(RLIMIT_NOFILE, (10240, 10240))
   basicConfig(level=DEBUG)
-  if args.debug:
-    global WARMUP_TIME, MEASURE_TIME, IDLENESS
-    WARMUP_TIME = 0.5
-    MEASURE_TIME = 1
-    IDLENESS *= 5
   assert isdir(args.prefix), "prefix should be a valid directory"
 
   gc.disable()
@@ -54,34 +34,32 @@ def main():
   if 'double' in args.tests:
     double(args.prefix)
 
+
 def single(prefix):
-  with cgmgr:
-    vm = cgmgr.start("0")
-    time.sleep(BOOT_TIME)
-    rpc = retry(rpyc.connect, args=(str(vm.addr),), kwargs={"port":6666}, retries=10)
-    RPopen = rpc.root.Popen
+  vm = VMS[0]
+  vm = vm.start()
+  time.sleep(BOOT_TIME)
 
-    outdir = s("${prefix}/single/")
-    if not exists(outdir):
-      makedirs(outdir)
+  outdir = s("${prefix}/single/")
+  if not exists(outdir):
+    makedirs(outdir)
 
-    remains = len(benchmarks)
-    for name, cmd in benchmarks.items():
+    remains = len(basis)
+    for name, cmd in basis.items():
       print("remains %s tests" % remains)
       remains -= 1
-      output = s("${prefix}/single/${name}")
-      perf_cmd = PERF_CMD.format(pid=vm.pid, t=MEASURE_TIME, events=events, output=output)
+      outfile = s("${prefix}/single/${name}")
 
       log.debug("waiting for idleness")
       wait_idleness(IDLENESS*2.3)
       log.debug("starting %s" % name)
-      p = RPopen(cmd)
+      p = vm.Popen(cmd)
       log.debug("warming up for %s" % WARMUP_TIME)
       time.sleep(WARMUP_TIME)
       log.debug("starting measurements")
-      run(perf_cmd)
+      vm.stat(outfile)
       assert p.poll() is None, "test unexpectedly terminated"
-      log.debug("finishing tests")
+      log.debug("finishing test")
       p.killall()
       gc.collect()
 

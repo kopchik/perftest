@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 
 from useful.mystruct import Struct
+from perftool import get_events
 from useful.log import Log
+from numa import topology
 
+from resource import setrlimit, RLIMIT_NOFILE
+from ipaddress import IPv4Address
 from socket import gethostname
 from os import geteuid
 from sys import exit
-
-from numa import topology
 
 if geteuid() != 0:
   exit("you need root to run this scrips")
@@ -17,7 +19,9 @@ HOSTNAME = gethostname()
 WARMUP_TIME = 15
 IDLENESS = 45
 MEASURE_TIME = 180
-events = ",".join(get_useful_events())
+BOOT_TIME = 10
+setrlimit(RLIMIT_NOFILE, (10240, 10240))
+events = ",".join(get_events())
 
 
 ######################
@@ -52,6 +56,7 @@ elif HOSTNAME == 'u2':
     lxc = LXC(name=name, root=LXC_PREFIX+name, tpl=LXC_PREFIX+"/perftemplate/",
               addr=ip, gw="172.16.5.1", cpus=[x])
     lxc.destroy()
+    lxc.create()
     VMS.append(lxc)
 else:
   raise Exception("Unknown host. Please configure it first in config.py.")

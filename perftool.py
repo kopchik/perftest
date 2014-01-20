@@ -24,8 +24,7 @@ log = Log("perftool")
 BUF_SIZE = 65535
 
 
-@memoized('/tmp/get_events.pickle')
-def get_events(hw=True, sw=True, cache=True, tp=True):
+def _get_events(hw=True, sw=True, cache=True, tp=True):
   selector = ""
   if hw: selector += " hw"
   if sw: selector += " sw"
@@ -38,11 +37,12 @@ def get_events(hw=True, sw=True, cache=True, tp=True):
 
 
 
-def get_useful_events():
+@memoized('/tmp/get_events.pickle')
+def get_events():
   """select counters that are the most useful for our purposes"""
 
   bad = "kvmmmu:kvm_mmu_get_page,kvmmmu:kvm_mmu_sync_page,kvmmmu:kvm_mmu_unsync_page,kvmmmu:kvm_mmu_prepare_zap_page".split(',')
-  result =  get_events(tp=False)
+  result =  _get_events(tp=False)
   result = ['cycles' if x=='cpu-cycles' else x for x in result]  # replace cpu-cycles with cycles
   #tpevents = get_events(tp=True)
   #for prefix in ['kvm:', 'kvmmmu:', 'vmscan:', 'irq:', 'signal:', 'kmem:', 'power:']:
