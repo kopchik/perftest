@@ -5,7 +5,9 @@
 from useful.run import sudo, sudo_
 from useful.mstring import s
 from libvmc import gen_mac
-import os.path
+from utils import retry
+from os.path import exists
+import rpyc
 import os
 
 TPL = """
@@ -40,7 +42,7 @@ class LXC:
     self.rpc  = None
 
   def create(self):
-    if os.path.exists(self.root):
+    if exists(self.root):
       raise Exception(s("Cannot create snapshot: path exists: ${self.root}"))
     sudo(s("btrfs subvolume snapshot ${self.tpl} ${self.root}"))
     os.makedirs(s("/var/lib/lxc/${self.name}/"))
@@ -54,7 +56,7 @@ class LXC:
   def destroy(self):
     self.stop(t=1)
     sudo_(s("lxc-destroy -n ${self.name}"))
-    if os.path.exists(self.root):
+    if exists(self.root):
       sudo(s("btrfs subvolume delete ${self.root}"))
       sudo_(s("rm -rf ${self.root}"))
 
@@ -68,9 +70,9 @@ class LXC:
 
   def Popen(self, *args, **kwargs):
     if not self.rpc:
-      self.rpc = retry(rpyc.connect, args=(str(vm.addr),), \
+      self.rpc = retry(rpyc.connect, args=(str(self.addr),), \
                         kwargs={"port":6666}, retries=10)
-    return rpc.root.Popen(*args, **kwargs)
+    return self.rpc.root.Popen(*args, **kwargs)
 
   def stat(self, output):
     from config import MEASURE_TIME, events

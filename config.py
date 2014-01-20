@@ -94,3 +94,4 @@ def enable_debug():
   WARMUP_TIME = 0
   MEASURE_TIME = 0.5
   IDLENESS = 70
+enable_debug()
