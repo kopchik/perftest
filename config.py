@@ -17,6 +17,7 @@ HOSTNAME = gethostname()
 WARMUP_TIME = 15
 IDLENESS = 45
 MEASURE_TIME = 180
+events = ",".join(get_useful_events())
 
 
 ######################

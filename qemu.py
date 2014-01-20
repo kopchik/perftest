@@ -9,7 +9,6 @@ from subprocess import check_call
 from ipaddress import ip_address
 
 PERF_CMD = "sudo perf kvm stat -e {events} -x, -p {pid} -o {output} sleep {t}"
-events = ",".join(get_useful_events())
 
 
 class Template(KVM):
@@ -30,9 +29,8 @@ class Template(KVM):
                         kwargs={"port":6666}, retries=10)
     return rpc.root.Popen(*args, **kwargs)
 
-  def perf_stat(self, output):
-    global events
-    from config import MEASURE_TIME
+  def stat(self, output):
+    from config import MEASURE_TIME, events
     cmd = PERF_CMD.format(events=events, pid=self.pid,
                           output=output, t=MEASURE_TIME)
     check_call(cmd)

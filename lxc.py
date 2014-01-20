@@ -71,3 +71,7 @@ class LXC:
       self.rpc = retry(rpyc.connect, args=(str(vm.addr),), \
                         kwargs={"port":6666}, retries=10)
     return rpc.root.Popen(*args, **kwargs)
+
+  def stat(self, output):
+    from config import MEASURE_TIME, events
+    cgstat(path="lxc/"+lxc.name, cpus=lxc.cpus, events=events, t=MEASURE_TIME, out=output)
