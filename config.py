@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 
 from useful.mystruct import Struct
-from useful.log import log
+from useful.log import Log
 
 from socket import gethostname
 from os import geteuid
 from sys import exit
+
+from numa import topology
 
 if geteuid() != 0:
   exit("you need root to run this scrips")
@@ -22,19 +24,19 @@ MEASURE_TIME = 180
 ######################
 
 VMS = []
-if HOSTNAME == 'fx':
+if HOSTNAME == 'fx' or HOSTNAME == 'p1':
   SIBLINGS = True,
   RESULTS = "./results/fx/cc_auto/notp/"
 
-  for i in CPUS:
-  vm = Template(
-    name = str(i),
-    cpus = [i],
-    addr = ip_address("172.16.5.10")+i,
-    net  = [Bridged(ifname="virt%s"%i, model='e1000',
-           mac="52:54:91:5E:38:%02x"%i, br="intbr")],
-    drives = [Drive("/home/sources/perfvms/perf%s.qcow2"%i,
-              cache="unsafe")])
+  for i in topology.cpus:
+    vm = Template(
+      name = str(i),
+      cpus = [i],
+      addr = ip_address("172.16.5.10")+i,
+      net  = [Bridged(ifname="virt%s"%i, model='e1000',
+             mac="52:54:91:5E:38:%02x"%i, br="intbr")],
+      drives = [Drive("/home/sources/perfvms/perf%s.qcow2"%i,
+                cache="unsafe")])
   vm.kill()
   VMS.append(vm)
 

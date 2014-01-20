@@ -3,6 +3,7 @@ from useful.typecheck import type_check
 from useful.log import Log
 from collections import OrderedDict as odict
 import subprocess
+import pickle
 import shlex
 import time
 import sys
@@ -114,6 +115,25 @@ def csv2dict(f):
       if v == '<not supported>': continue
       d[k] = int(float(v))
   return d
+
+
+class memoized:
+  def __init__(self, path):
+    self.path = path
+  def __call__(self, f):
+    path = self.path
+    def wrapper(*args, **kwargs):
+      try:
+        return pickle.load(open(path, 'rb'))
+      except Exception as e:
+        print("cannot unpickle %s:" % path, e)
+        result = f(*args, **kwargs)
+        try:
+          pickle.dump(result, open(path, 'wb'))
+        except Exception as e:
+          print("cannot pickle %s:" % path, e)
+        return result
+    return wrapper
 
 
 if __name__ == '__main__':

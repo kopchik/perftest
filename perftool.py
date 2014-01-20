@@ -2,6 +2,7 @@
 
 from collections import OrderedDict
 from useful.log import Log
+from utils import memoized
 from signal import SIGTERM
 from pprint import pprint
 from subprocess import *
@@ -23,6 +24,7 @@ log = Log("perftool")
 BUF_SIZE = 65535
 
 
+@memoized('/tmp/get_events.pickle')
 def get_events(hw=True, sw=True, cache=True, tp=True):
   selector = ""
   if hw: selector += " hw"
@@ -33,6 +35,7 @@ def get_events(hw=True, sw=True, cache=True, tp=True):
   cmd = counters_cmd % selector
   raw = check_output(cmd, shell=True)
   return raw.decode().strip(' \n').split('\n')
+
 
 
 def get_useful_events():
