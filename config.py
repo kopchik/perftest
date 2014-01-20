@@ -42,8 +42,8 @@ if HOSTNAME == 'fx' or HOSTNAME == 'p1':
              mac="52:54:91:5E:38:%02x"%i, br="intbr")],
       drives = [Drive("/home/sources/perfvms/perf%s.qcow2"%i,
                 cache="unsafe")])
-  vm.kill()
-  VMS.append(vm)
+    vm.kill()
+    VMS.append(vm)
 
 elif HOSTNAME == 'u2':
   from lxc import LXC

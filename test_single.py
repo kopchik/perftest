@@ -24,44 +24,44 @@ def main():
   parser.add_argument('-t', '--tests', default=['single', 'double'], nargs='*')
   args = parser.parse_args()
 
-  log.info(args)
   basicConfig(level=DEBUG)
+  log.info(args)
   assert isdir(args.prefix), "prefix should be a valid directory"
 
   gc.disable()
+  vm = VMS[0]
+  vm.start()
+  time.sleep(BOOT_TIME)
+
   if 'single' in args.tests:
-    single(args.prefix)
+    single(vm, args.prefix)
   if 'double' in args.tests:
     double(args.prefix)
 
 
-def single(prefix):
-  vm = VMS[0]
-  vm = vm.start()
-  time.sleep(BOOT_TIME)
-
+def single(vm, prefix):
   outdir = s("${prefix}/single/")
   if not exists(outdir):
     makedirs(outdir)
 
-    remains = len(basis)
-    for name, cmd in basis.items():
-      print("remains %s tests" % remains)
-      remains -= 1
-      outfile = s("${prefix}/single/${name}")
+  remains = len(basis)
+  for name, cmd in basis.items():
+    print("remains %s tests" % remains)
+    remains -= 1
+    outfile = s("${prefix}/single/${name}")
 
-      log.debug("waiting for idleness")
-      wait_idleness(IDLENESS*2.3)
-      log.debug("starting %s" % name)
-      p = vm.Popen(cmd)
-      log.debug("warming up for %s" % WARMUP_TIME)
-      time.sleep(WARMUP_TIME)
-      log.debug("starting measurements")
-      vm.stat(outfile)
-      assert p.poll() is None, "test unexpectedly terminated"
-      log.debug("finishing test")
-      p.killall()
-      gc.collect()
+    log.debug("waiting for idleness")
+    wait_idleness(IDLENESS*2.3)
+    log.debug("starting %s" % name)
+    p = vm.Popen(cmd)
+    log.debug("warming up for %s" % WARMUP_TIME)
+    time.sleep(WARMUP_TIME)
+    log.debug("starting measurements")
+    vm.stat(outfile)
+    assert p.poll() is None, "test unexpectedly terminated"
+    log.debug("finishing test")
+    p.killall()
+    gc.collect()
 
 
 def double(prefix, far=True):
