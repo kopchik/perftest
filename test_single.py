@@ -46,7 +46,7 @@ def single(vm, prefix):
 
   remains = len(basis)
   for name, cmd in basis.items():
-    print("remains %s tests" % remains)
+    log.debug("remains %s tests" % remains)
     remains -= 1
     outfile = s("${prefix}/single/${name}")
 
@@ -65,7 +65,7 @@ def single(vm, prefix):
 
 
 def double(prefix, far=True):
-  topology = OnlineCPUTopology()
+  topology = CPUTopology()
   if far:
     cpu, bgcpu = topology.cpus_no_ht[:2]
   else:

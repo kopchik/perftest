@@ -4,6 +4,7 @@
 """
 from useful.run import sudo, sudo_
 from useful.mstring import s
+from perftool import cgstat
 from libvmc import gen_mac
 from utils import retry
 from os.path import exists
@@ -74,6 +75,6 @@ class LXC:
                         kwargs={"port":6666}, retries=10)
     return self.rpc.root.Popen(*args, **kwargs)
 
-  def stat(self, output):
+  def stat(self, outfile):
     from config import MEASURE_TIME, events
-    cgstat(path="lxc/"+lxc.name, cpus=lxc.cpus, events=events, t=MEASURE_TIME, out=output)
+    cgstat(path="lxc/"+self.name, cpus=self.cpus, events=events, t=MEASURE_TIME, out=outfile)
