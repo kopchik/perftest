@@ -8,7 +8,8 @@ def options(opt):
 def configure(conf):
   conf.env["CC"] = ["clang"]
   conf.load('compiler_c')
-  conf.env.CFLAGS = ['-ggdb', '-std=gnu99']
+  #conf.env.CFLAGS = ['-ggdb', '-std=gnu99']
+  conf.env.CFLAGS = ['-std=gnu99']
   if 0:
     conf.env.CFLAGS += ['-fmudflap']
     conf.env.LINKFLAGS = ['-lmudflap']
