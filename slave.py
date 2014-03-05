@@ -23,6 +23,7 @@ class MyPopen(subprocess.Popen):
     if self.poll() is not None:
         return
     #kill children
+    self.send_signal(signal.SIGSTOP)
     cmd = "pkill -KILL -P %s" % self.pid
     subprocess.call(cmd.split())
     #kill myself
