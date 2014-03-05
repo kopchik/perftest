@@ -51,7 +51,7 @@ if HOSTNAME == 'fx' or HOSTNAME == 'p1':
 elif HOSTNAME == 'u2':
   from lxc import LXC
   SIBLINGS = False,
-  RESULTS = "./results/fx/u2/"
+  RESULTS = "./results/u2/"
   LXC_PREFIX = "/home/"
   for x in range(4):
     ip = str(IPv4Address("172.16.5.10")+x)
@@ -61,6 +61,9 @@ elif HOSTNAME == 'u2':
     lxc.destroy()
     lxc.create()
     VMS.append(lxc)
+elif HOSTNAME == 'limit':
+  RESULTS = "./results/limit/"
+  IDLENESS = 40
 else:
   raise Exception("Unknown host. Please configure it first in config.py.")
 

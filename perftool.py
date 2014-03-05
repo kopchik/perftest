@@ -224,11 +224,11 @@ if __name__ == '__main__':
 
   stat_args = dict(pid=args.pid if args.pid else args.kvmpid, t=args.time, ann="example output", norm=True)
   if args.kvmpid:
-    r = kvmstat(events=get_useful_events(), **stat_args)
+    r = kvmstat(events=get_events(), **stat_args)
   elif args.pid:
-     r = stat(events=get_useful_events(), **stat_args)
+     r = stat(events=get_events(), **stat_args)
   else:
-    r = get_useful_events()
+    r = get_events()
     r = ",".join(r)
 
   pprint(r)
