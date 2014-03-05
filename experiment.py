@@ -5,9 +5,10 @@ from perftool import stat, get_events
 import gc; gc.disable()
 import argparse
 import rpyc
-from config import basis, RESULTS, IDLENESS
+from config import basis, RESULTS, IDLENESS, WARMUP_TIME
 from utils import check_idleness, wait_idleness
 from subprocess import check_call
+from time import sleep
 import shlex
 import os
 
@@ -36,10 +37,10 @@ if __name__ == '__main__':
     if name != "pgbench":
       cmd = "bencher.py -s 100000 -- "+cmd
     p = RPopen(cmd)
+    sleep(WARMUP_TIME)
 
-    perfcmd = PERFCMD.format(interval=args.interval, events="cycles",
+    perfcmd = PERFCMD.format(interval=args.interval, events="cycles:G",
                              output=RESULTS+name, time=args.time, pid=args.pid)
-    print(perfcmd)
     check_call(shlex.split(perfcmd))
 
     assert p.poll() is None, "test unexpectedly terminated"
