@@ -20,6 +20,7 @@ if __name__ == '__main__':
   parser.add_argument('-p', '--pid', type=int, help="pid of process")
   parser.add_argument('-a', '--addr', help="remote addr")
   parser.add_argument('-i', '--interval', type=int, help="interval between measurements")
+  parser.add_argument('-o', '--output', type=str, help="path were to save data")
   args = parser.parse_args()
 
 
@@ -30,7 +31,7 @@ if __name__ == '__main__':
 
   rpc = rpyc.connect(args.addr, port=6666)
   RPopen = rpc.root.Popen
-  PERFCMD = "sudo perf stat -I {interval} -e {events} -x, -o {output} -p {pid} sleep {time}"
+  PERFCMD = "sudo /home/sources/abs/core/linux/src/linux-3.13/tools/perf/perf stat -I {interval} -e {events} -x, -o {output} -p {pid} sleep {time}"
   for name,cmd in basis.items():
     wait_idleness(IDLENESS)
     print("launching %s"%name)
@@ -40,7 +41,7 @@ if __name__ == '__main__':
     sleep(WARMUP_TIME)
 
     perfcmd = PERFCMD.format(interval=args.interval, events="cycles:G",
-                             output=RESULTS+name, time=args.time, pid=args.pid)
+                             output=args.output+'/'+name, time=args.time, pid=args.pid)
     check_call(shlex.split(perfcmd))
 
     assert p.poll() is None, "test unexpectedly terminated"
