@@ -18,7 +18,7 @@ if geteuid() != 0:
 
 log = Log("config")
 HOSTNAME = gethostname()
-WARMUP_TIME = 15
+WARMUP_TIME = 10
 IDLENESS = 45
 MEASURE_TIME = 180
 BOOT_TIME = 10
@@ -81,7 +81,7 @@ basis = dict(
   matrix = "/home/sources/perftest/benches/matrix 2048",
   sdag   = "/home/sources/test_SDAG/test_sdag -t 5 -q 1000 /home/sources/test_SDAG/dataset.dat",
   sdagp  = "/home/sources/test_SDAG/test_sdag+ -t 5 -q 1000 /home/sources/test_SDAG/dataset.dat",
-  blosc  = "/home/sources/perftest/benches/pyblosc.py",
+  blosc  = "/home/sources/perftest/benches/pyblosc.py -r 10000000",
   ffmpeg = "ffmpeg -i /home/sources/avatar_trailer.m2ts \
             -threads 1 -t 10 -y -strict -2 -loglevel panic \
             -acodec aac -aq 100 \
