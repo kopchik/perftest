@@ -38,3 +38,5 @@ benches/polute
 .lock-waf_linux_build
 .*.swp
 benches/matrix
+old/site/results
+*.png
