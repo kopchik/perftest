@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from collections import OrderedDict
+from useful.csv import Reader as CSVReader
 from useful.log import Log
 from utils import memoized
 from signal import SIGTERM
@@ -211,14 +212,44 @@ def pidof(psname, exact=False):
   return result
 
 
+def f2list(fname):
+  """ read samples from file """
+  ipcs, ts = [], []
+  with open(fname) as csvfile:
+    cycles = 0
+    for ipc, c in CSVReader(csvfile, type=(float,int)):
+      cycles += c
+      t = cycles*CYCLE*1000
+      if t > 100:  # it is pointless to dig deeper
+        break
+      ipcs.append(ipc)
+      ts.append(t)
+    return ts, ipcs
+
+def f2list(fname):
+  ts, ins = [], []
+  with open(fname) as csvfile:
+    t_prev = 0
+    for t, i, _ in CSVReader(csvfile, type=(float,int,str), errors='ignore'):
+      delta = t - t_prev
+      t_prev = t
+      ipc = i/delta/FREQ
+      #if ipc <0.7: continue
+      ts.append(t*1000)
+      ins.append(ipc)
+    return ts, ins
+
+
+
+
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Run experiments')
   parser.add_argument('-t', '--time', type=float, default=10, help="measurement time")
   parser.add_argument('--debug', default=False, const=True, action='store_const', help='enable debug mode')
+  parser.add_argument('-e', '--events', default=False, const=True, action='store_const', help="get useful events")
   group = parser.add_mutually_exclusive_group(required=True)
   group.add_argument('--kvmpid', type=int, help="pid of qemu process")
   group.add_argument('--pid', type=int, help="pid of normal process")
-  group.add_argument('-e', '--events', default=False, const=True, action='store_const', help="get useful events")
   args = parser.parse_args()
   print(args)
 
