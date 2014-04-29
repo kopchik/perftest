@@ -13,8 +13,8 @@ if 'DISPLAY' not in os.environ:
 def parse(cmd):
   return dict(s.split('=') for s in cmd.split('|'))
 
-def single(path, label=None, color=None):
-  
+def single(path, label=None, lw=4, color=None):
+  lw = float(lw)
   with open(path) as csvfile:
     ts, cycles = [], []
     cur_cycles = 0
@@ -31,8 +31,20 @@ def single(path, label=None, color=None):
   print(ts[:10], cycles[:10])
   args = {}
   if color: args['color'] = color
-  p.plot(ts, cycles, label=label, lw=4, **args)
+  p.plot(ts, cycles, label=label, lw=lw, **args)
 
+def annotate(y, start, stop, text, notch=0.07, color='black', lw=2):
+  # from http://stackoverflow.com/questions/7684475/plotting-labeled-intervals-in-matplotlib-gnuplot
+  lw = float(lw)
+  y = float(y)
+  start = float(start)
+  stop = float(stop)
+  notch = float(notch)
+
+  p.hlines(y, start, stop, color, lw=lw*2)
+  p.vlines(start, y+notch, y-notch, color, lw=lw)
+  p.vlines(stop, y+notch, y-notch, color, lw=lw)
+  p.text((stop-start)/2, y+0.015 , text, horizontalalignment='center', fontsize=30)
 
 if __name__ == '__main__':
   parser = ArgumentParser()
@@ -41,7 +53,7 @@ if __name__ == '__main__':
   parser.add_argument('-t', '--title', help="plot title")
   parser.add_argument('-a', '--annotations', default=None, nargs='+')
   parser.add_argument('-x', '--xlabel', default=None)
-  parser.add_argument('--xlim', type=int, nargs=2, help="limit X axis of the plot")
+  parser.add_argument('--xlim', type=float, nargs=2, help="limit X axis of the plot")
   parser.add_argument('--ylim', type=float, nargs=2, help="limit Y axis of the plot")
   parser.add_argument('-y', '--ylabel', default=None)
   parser.add_argument('-f', '--freq', type=int, default=None, help="CPU frequency")
@@ -66,7 +78,7 @@ if __name__ == '__main__':
   if args.ylabel: p.ylabel(args.ylabel)
   if args.xlim: p.xlim(args.xlim)
   if args.ylim: p.ylim(args.ylim)
-  if args.show: p.show()
   if args.title: p.title(args.title)
   if args.output:
     p.savefig(args.output, dpi=300, bbox_inches='tight')
+  if args.show: p.show()
