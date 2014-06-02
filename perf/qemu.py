@@ -3,10 +3,11 @@
 from libvmc import KVM, Bridged, Drive, main, \
   __version__ as vmc_version
 assert vmc_version >= 12, "vmc library is too old"
-from perftool import get_useful_events
-
+from .perftool import get_events
+from .utils import retry
 from subprocess import check_call
 from ipaddress import ip_address
+import rpyc
 
 PERF_CMD = "sudo perf kvm stat -e {events} -x, -p {pid} -o {output} sleep {t}"
 
@@ -20,14 +21,15 @@ class Template(KVM):
          mac="52:54:91:5E:38:BB", br="intbr")]
   drives = [Drive("/home/sources/perfvms/template.qcow2",
             cache="unsafe")]
-  auto   = False
+  auto   = True
   rpc    = None
+  Popen  = None
 
   def Popen(self, *args, **kwargs):
     if not self.rpc:
-      self.rpc = retry(rpyc.connect, args=(str(vm.addr),), \
+      self.rpc = retry(rpyc.connect, args=(str(self.addr),), \
                         kwargs={"port":6666}, retries=10)
-    return rpc.root.Popen(*args, **kwargs)
+    return self.rpc.root.Popen(*args, **kwargs)
 
   def stat(self, output):
     from config import MEASURE_TIME, events
