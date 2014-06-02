@@ -71,11 +71,23 @@ def annotate(y:float, start:float, stop:float, text, notch:float=0.07, color='bl
 
 
 def myboxplot(data, *args, labels=None, **kwargs):
+  alpha=0.6
   positions = [n+y+1 for n,y in zip(range(len(data)),cycle([+0.2,-0.2]))]
   box = p.boxplot(data, *args, positions=positions, **kwargs)
   p.plot(positions, [mean(d) for d in data], 'r*', markeredgecolor='red', lw=10)
   if labels:
-    p.xticks(np.arange(len(labels))*2+1.5, labels, rotation=20)
+    p.xticks(np.arange(len(labels))*2+1.5, labels, rotation=25)
+
+  # set colors
+  for patch, color in zip(box['boxes'], cycle(['green', 'blue'])):
+    patch.set_facecolor(color)
+    patch.set_alpha(alpha)
+
+  iso = p.Rectangle((0, 0), 1, 1, fc='green', ec='black', alpha=alpha)
+  fro = p.Rectangle((0, 0), 1, 1, color='blue', ec='black', alpha=alpha)
+  p.legend([iso, fro], ["isolated env", "frozen env"])
+
+
   return box
 
 def analyze_reverse2(data):
@@ -84,11 +96,12 @@ def analyze_reverse2(data):
   shared = data.shared
   plots, labels = [], []
   tuples = []
-  for test, shared, isolated in dictzip(shared, isolated):
+  for test, isolated, shared in dictzip(isolated, shared):
      prec = precision2(shared, isolated)
      tuples.append((test, isolated, shared, prec))
   tuples = sorted(tuples, key=lambda x: x[3])
-  for test, isolated, shared, prec in tuples:    
+  for test, isolated, shared, prec in tuples:
+      if prec >0.8: continue
       plots.append(isolated)
       plots.append(shared)
       labels.append("{} {:.1%}".format(test, prec))
@@ -141,14 +154,14 @@ def analyze_reverse(ref, exp, prec:float=0.95, maxtries:int=50, mode='hist', con
   else:
     sys.exit(s("unknown mode ${mode}"))
 
-def cmp_distr(data, mode='hist'):
+
+def distribution(data, mode='hist'):
   data = pickle.load(open(data, 'rb'))
   pure = data.result.pure   # data from pure performance isolation
   quasi = data.result.quasi # data from quasi isolation
   if mode == 'hist':
     for i, (test, ref, measurements) in enumerate(dictzip(pure, quasi)):
-      print(test, len(ref), len(measurements))
-      # if test != 'matrix': continue
+      # print(test, len(ref), len(measurements))
       print(ref)
       p.subplot(4,2,i+1)
       p.title(test)
@@ -157,11 +170,6 @@ def cmp_distr(data, mode='hist'):
       p.legend(loc="best")
       p.xlim(0,3)
 
-      # ref  = np.asarray(ref, dtype=np.float)
-      # test = np.asarray(measurements, dtype=np.float)
-      # xx =  np.sum(np.where(ref != 0, ref * np.log(ref/test), 0))
-      # print(xx)
-      # break
   elif mode == 'boxplot':
     labels = []
     data = []
@@ -169,14 +177,7 @@ def cmp_distr(data, mode='hist'):
       labels.append(test)
       data.append(ref)
       data.append(measurements)
-    # positions = (n+d for n,d in enumerate(cycle([+0.2,-0.2])))
     box = myboxplot(data, labels=labels, notch=True, patch_artist=True)
-    # set colors
-    for patch, color in zip(box['boxes'], cycle(['green', 'blue'])):
-      patch.set_facecolor(color)
-      patch.set_alpha(0.5)
-    p.figtext(0.55, 0.90, "Performance samples in isolated environment", backgroundcolor='green', size=18)
-    p.figtext(0.55, 0.86, "Performance samples in quasi-isolated env", backgroundcolor='blue', size=18)
 
 
 def analyze(real, samples, skip=0, thr=0.9):
