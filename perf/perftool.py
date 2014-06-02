@@ -3,7 +3,7 @@
 from collections import OrderedDict
 from useful.csv import Reader as CSVReader
 from useful.log import Log
-from utils import memoized
+from .utils import memoized
 from signal import SIGTERM
 from pprint import pprint
 from subprocess import *
