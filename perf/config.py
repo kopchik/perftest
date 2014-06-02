@@ -3,9 +3,9 @@
 from useful import __version__ as useful_version
 assert useful_version >= (1,5)
 from useful.mystruct import Struct
-from perftool import get_events
 from useful.log import Log
-from numa import topology
+from .perftool import get_events
+from .numa import topology
 
 from resource import setrlimit, RLIMIT_NOFILE
 from ipaddress import IPv4Address
@@ -23,7 +23,7 @@ IDLENESS = 45
 MEASURE_TIME = 180
 BOOT_TIME = 10
 setrlimit(RLIMIT_NOFILE, (10240, 10240))
-events = get_events()
+#events = get_events()
 #events = ",".join(get_events())
 
 
@@ -75,14 +75,14 @@ else:
 basis = dict(
   # INIT DB: sudo -u postgres pgbench -i
   pgbench = "sudo -u postgres pgbench -c 20 -s 10 -T 100000",
-  nginx_static = "siege -c 100 -t 666h http://localhost/big_static_file",  # TODO: too CPU consuming,
+  static  = "siege -c 100 -t 666h http://localhost/big_static_file",  # TODO: too CPU consuming,
   wordpress = "siege -c 100 -t 666h http://localhost/",
   # matrix = "/home/sources/perftest/benches/matrix.py -s 1024 -r 1000",
-  matrix = "/home/sources/perftest/benches/matrix 2048",
-  sdag   = "/home/sources/test_SDAG/test_sdag -t 5 -q 1000 /home/sources/test_SDAG/dataset.dat",
-  sdagp  = "/home/sources/test_SDAG/test_sdag+ -t 5 -q 1000 /home/sources/test_SDAG/dataset.dat",
+  matrix = "bencher.py -s 100000 -- /home/sources/perftest/benches/matrix 2048",
+  sdag   = "bencher.py -s 100000 -- /home/sources/test_SDAG/test_sdag -t 5 -q 1000 /home/sources/test_SDAG/dataset.dat",
+  sdagp  = "bencher.py -s 100000 -- /home/sources/test_SDAG/test_sdag+ -t 5 -q 1000 /home/sources/test_SDAG/dataset.dat",
   blosc  = "/home/sources/perftest/benches/pyblosc.py -r 10000000",
-  ffmpeg = "ffmpeg -i /home/sources/avatar_trailer.m2ts \
+  ffmpeg = "bencher.py -s 100000 -- ffmpeg -i /home/sources/avatar_trailer.m2ts \
             -threads 1 -t 10 -y -strict -2 -loglevel panic \
             -acodec aac -aq 100 \
             -vcodec libx264 -preset fast -crf 22 \
