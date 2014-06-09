@@ -69,7 +69,7 @@ class LXC:
     sudo(s("lxc-start -n ${self.name} -d"))
 
   def stop(self, t=10):
-    sudo_(s("lxc-shutdown -n ${self.name} -t ${t}"))
+    sudo_(s("lxc-stop -n ${self.name} -t ${t}"))
 
   def Popen(self, *args, **kwargs):
     if not self.rpc:
