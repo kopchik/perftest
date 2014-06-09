@@ -86,7 +86,7 @@ def stat(pid=None, events=[], time=0, perf="perf", guest=False, extra=""):
   # parse output of perf
   r = {}
   for s in result.splitlines():
-    rawcnt,*_,ev = s.split(',')
+    rawcnt,ev,*_ = s.split(',')
     if rawcnt == '<not counted>':
       raise NotCountedError
     r[ev] = int(rawcnt)
