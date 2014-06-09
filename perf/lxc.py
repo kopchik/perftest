@@ -86,5 +86,4 @@ class LXC:
       raise NotCountedError(err)
     if ins == 0 or cycles == 0:
       raise NotCountedError
-    return ins, cycles
-  stat = ipcstat
+    return ins/cycles
