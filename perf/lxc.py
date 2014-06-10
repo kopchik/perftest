@@ -29,6 +29,7 @@ lxc.autodev = 1
 lxc.cap.drop = mknod
 lxc.tty = 4
 lxc.pts = 1024
+lxc.kmsg = 0
 """
 
 
