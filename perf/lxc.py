@@ -59,7 +59,7 @@ class LXC:
 
   def destroy(self):
     self.stop(t=1)
-    sudo_(s("lxc-destroy -n ${self.name}"))
+    sudo_(s("lxc-destroy -n ${self.name} -f"))
     if exists(self.root):
       sudo(s("btrfs subvolume delete ${self.root}"))
       sudo_(s("rm -rf ${self.root}"))
