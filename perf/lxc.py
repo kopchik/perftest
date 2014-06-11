@@ -88,3 +88,8 @@ class LXC:
     if ins == 0 or cycles == 0:
       raise NotCountedError
     return ins/cycles
+
+  def __repr__(self):
+    cls = self.__class__.__name__
+    return "{cls}({self.name}, cpus={self.cpus}," \
+           " addr=\"{self.addr}\", root=\"{self.root}\")".format(cls=cls, self=self)
