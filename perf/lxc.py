@@ -33,6 +33,7 @@ lxc.kmsg = 0
 """
 
 
+vms = []
 class LXC:
   def __init__(self, name, root, tpl, addr, gw, cpus=None):
     self.name = name
@@ -44,6 +45,7 @@ class LXC:
     self.started = False
     self.cpus = cpus
     self.rpc  = None
+    vms.append(self)
 
   def create(self):
     if exists(self.root):
@@ -68,6 +70,22 @@ class LXC:
     #if self.started:
     #  return
     sudo(s("lxc-start -n ${self.name} -d"))
+
+  def shared(self):
+    for vm in vms:
+      if vm == self: continue
+      vm.unfreeze()
+
+  def exclusive(self):
+    for vm in vms:
+      if vm == self: continue
+      vm.freeze()
+
+  def freeze(self):
+    sudo(s("lxc-freeze -n ${self.name}"))
+
+  def unfreeze(self):
+    sudo(s("lxc-unfreeze -n ${self.name}"))
 
   def stop(self, t=10):
     sudo_(s("lxc-stop -n ${self.name} -t ${t}"))
