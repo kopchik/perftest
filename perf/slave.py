@@ -3,7 +3,7 @@ __VERSION__ = 0.5
 from rpyc.utils.server import ThreadedServer  # or ForkingServer
 import subprocess
 import argparse
-import signal
+from signal import SIGSTOP, SIGKILL
 import shlex
 import rpyc
 import os
@@ -26,15 +26,15 @@ class MyPopen(subprocess.Popen):
       cmd = shlex.split(cmd)
     super().__init__(cmd, *args, **kwargs)
 
-  def killall(self):
+  def killall(self, sig=SIGKILL):
     if self.poll() is not None:
         return
     #kill children
-    self.send_signal(signal.SIGSTOP)
-    cmd = "pkill -KILL -P %s" % self.pid
+    self.send_signal(SIGSTOP)
+    cmd = "pkill -{sig} -P {pid}".format(sig=sig, pid=self.pid)
     subprocess.call(cmd.split())
     #kill myself
-    self.kill()
+    self.send_signal(sig)
 
 
 class MyService(rpyc.Service):
