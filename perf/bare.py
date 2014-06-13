@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
 from .perftool import stat, NotCountedError
-
+from .slave import MyPopen
 from useful.run import sudo, sudo_
 from useful.mstring import s
-from slave import MyPopen
 from signal import SIGSTOP, SIGCONT
+
 
 vms = []
 class Bare:
