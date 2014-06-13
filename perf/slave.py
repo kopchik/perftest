@@ -19,6 +19,13 @@ import os
 
 
 class MyPopen(subprocess.Popen):
+  def __init__(self, cmd, *args, **kwargs):
+    # do not split into tokens if shell=True is specified
+    # because shell will execute only the first element
+    if isinstance(cmd, str) and not kwargs.get('shell', False):
+      cmd = shlex.split(cmd)
+    super().__init__(cmd, *args, **kwargs)
+
   def killall(self):
     if self.poll() is not None:
         return
@@ -31,15 +38,8 @@ class MyPopen(subprocess.Popen):
 
 
 class MyService(rpyc.Service):
-  def exposed_Popen(self, cmd, *args, **kwargs):
-      # do not split into tokens if shell=True is specified
-      # because shell will execute only the first element
-      if isinstance(cmd, str) and not kwargs.get('shell', False):
-        cmd = shlex.split(cmd)
-      #p = subprocess.Popen(cmd)
-      p = MyPopen(cmd, *args, **kwargs)
-      return p
-
+  def exposed_Popen(self, *args, **kwargs):
+      return MyPopen(*args, **kwargs)
 
 
 if __name__ == "__main__":
