@@ -2,6 +2,6 @@
 from setuptools import setup, find_packages
 setup(
   name = "perf",
-  version = "1.0",
+  version = "2.0",
   packages = ['perf'],
 )
