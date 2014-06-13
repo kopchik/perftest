@@ -76,7 +76,7 @@ def stat(pid=None, events=[], time=0, perf="perf", guest=False, extra=""):
   assert events and time
   CMD = "{perf} kvm" if guest else "{perf}"
   CMD += " stat -e {events} --log-fd {fd} -x, {extra} sleep {time}"
-  if pid: extra += " -p {pid}"
+  if pid: extra += " -p %s" % pid
   # prepare cmd and call it
   read, write = socketpair()
   cmd = CMD.format(perf=perf, pid=pid, events=",".join(events), \
