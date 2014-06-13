@@ -3,7 +3,7 @@
 from libvmc import KVM, Bridged, Drive, main, \
   __version__ as vmc_version
 assert vmc_version >= 12, "vmc library is too old"
-from .perftool import get_events
+from .perftool import kvmstat, NotCountedError
 from .utils import retry
 from subprocess import check_call
 from ipaddress import ip_address
@@ -24,6 +24,7 @@ class Template(KVM):
   auto   = True
   rpc    = None
   Popen  = None
+  bname  = None  # benchmark name
 
   def Popen(self, *args, **kwargs):
     if not self.rpc:
@@ -31,11 +32,26 @@ class Template(KVM):
                         kwargs={"port":6666}, retries=10)
     return self.rpc.root.Popen(*args, **kwargs)
 
-  def stat(self, output):
-    from config import MEASURE_TIME, events
-    cmd = PERF_CMD.format(events=events, pid=self.pid,
-                          output=output, t=MEASURE_TIME)
-    check_call(cmd)
+  def shared(self):
+    for vm in vms:
+      if vm == self: continue
+      vm.unfreeze()
+
+  def exclusive(self):
+    for vm in vms:
+      if vm == self: continue
+      vm.freeze()
+
+  def ipcstat(self, time=1):
+    try:
+      r = kvmstat(self.pid, ['instructions', 'cycles'], time)
+      ins = r['instructions']
+      cycles = r['cycles']
+    except Exception as err:
+      raise NotCountedError(err)
+    if ins == 0 or cycles == 0:
+      raise NotCountedError
+    return ins, cycles
 
 
 
