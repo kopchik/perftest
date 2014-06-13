@@ -51,7 +51,7 @@ class Template(KVM):
       raise NotCountedError(err)
     if ins == 0 or cycles == 0:
       raise NotCountedError
-    return ins, cycles
+    return ins/cycles
 
 
 
