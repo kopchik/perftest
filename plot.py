@@ -73,7 +73,7 @@ def annotate(y:float, start:float, stop:float, text, notch:float=0.07, color='bl
 def myboxplot(data, *args, labels=None, **kwargs):
   alpha=0.6
   positions = [n+y+1 for n,y in zip(range(len(data)),cycle([+0.2,-0.2]))]
-  box = p.boxplot(data, *args, positions=positions, **kwargs)
+  box = p.boxplot(data, *args, positions=positions, patch_artist=True, **kwargs)
   p.plot(positions, [mean(d) for d in data], 'r*', markeredgecolor='red', lw=10)
   if labels:
     p.xticks(np.arange(len(labels))*2+1.5, labels, rotation=25)
@@ -101,7 +101,7 @@ def analyze_reverse2(data):
      tuples.append((test, isolated, shared, prec))
   tuples = sorted(tuples, key=lambda x: x[3])
   for test, isolated, shared, prec in tuples:
-      if prec >0.8: continue
+      # if prec >0.1: continue
       plots.append(isolated)
       plots.append(shared)
       labels.append("{} {:.1%}".format(test, prec))
@@ -177,7 +177,7 @@ def distribution(data, mode='hist'):
       labels.append(test)
       data.append(ref)
       data.append(measurements)
-    box = myboxplot(data, labels=labels, notch=True, patch_artist=True)
+    box = myboxplot(data, labels=labels, notch=True)
 
 
 def analyze(real, samples, skip=0, thr=0.9):
