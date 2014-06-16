@@ -66,4 +66,4 @@ class Bare:
 
   def __repr__(self):
     cls = self.__class__.__name__
-    return "{cls}({self.name}, cmd={self.cmd}, cpus=\"{self.cpus}\")".format(cls=cls, self=self)
+    return "{cls}(=\"{self.cpus}\", running={self.pipe})".format(cls=cls, self=self)
