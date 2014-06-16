@@ -22,7 +22,7 @@ class Bare:
     self.pipe.killall()
 
   def start(self):
-    return self.Popen(self.cmd)
+    return False  # False indicates that container has already been started
 
   def stop(self):
     if self.pipe:
