@@ -47,8 +47,9 @@ class Bare:
     assert self.pipe
     self.pipe.killall(SIGCONT)
 
-  def Popen(self, *args, **kwargs):
-    self.pipe = MyPopen(*args, **kwargs)
+  def Popen(self, cmd, *args, **kwargs):
+    cmd = ("taskset -c %s " % self.cpus[0]) + cmd
+    self.pipe = MyPopen(cmd, *args, **kwargs)
     return self.pipe
 
   def ipcstat(self, time):
