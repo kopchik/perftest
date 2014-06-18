@@ -33,10 +33,11 @@ main (int argc, char *argv[])
   gsl_matrix_view B = gsl_matrix_view_array(b, size, size);
   gsl_matrix_view C = gsl_matrix_view_array(c, size, size);
 
-  gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,
-                  1.0, &A.matrix, &B.matrix,
-                  0.0, &C.matrix);
-
+  while (1) {
+    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,
+                    1.0, &A.matrix, &B.matrix,
+                    0.0, &C.matrix);
+  }
   //printf ("[ %g, %g\n", c[0], c[1]);
   //printf ("  %g, %g ]\n", c[2], c[3]);
 
