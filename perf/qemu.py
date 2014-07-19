@@ -33,12 +33,12 @@ class Template(KVM):
     return self.rpc.root.Popen(*args, **kwargs)
 
   def shared(self):
-    for vm in vms:
+    for vm in self.mgr.instances.values():
       if vm == self: continue
       vm.unfreeze()
 
   def exclusive(self):
-    for vm in vms:
+    for vm in self.mgr.instances.values():
       if vm == self: continue
       vm.freeze()
 
