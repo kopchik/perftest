@@ -9,8 +9,6 @@ from subprocess import check_call
 from ipaddress import ip_address
 import rpyc
 
-PERF_CMD = "sudo perf kvm stat -e {events} -x, -p {pid} -o {output} sleep {t}"
-
 
 class Template(KVM):
   cmd    = "qemu-system-x86_64 -enable-kvm -curses"
