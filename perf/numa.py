@@ -34,29 +34,27 @@ def filter_ht(cpus: list):
 # TODO: assert only one-node is supported
 class CPUTopology:
   """ Get NUMA topology. Only online CPUs are counted. """
-  cpus = []
-  cpus_no_ht = []
-  ht_siblings = {}
-  all = cpus
-  no_ht = cpus_no_ht
-  ht_map = ht_siblings
+
+  def __init__(self):
+    self.all  = read_int_list(PREFIX + "cpu/online")
+    self.ht_map = {}
+    for cpu in self.all:
+      self.ht_map[cpu] = self.get_thread_sibling(cpu)
+    self.no_ht = filter_ht(self.all)
+    ht = list(set(self.all) - set(self.no_ht))
+    self.by_rank = sorted(self.no_ht) + sorted(ht)
 
   def get_thread_sibling(self, cpu):
     siblings = read_int_list(PREFIX + "cpu/cpu%s/topology/thread_siblings_list" % cpu)
     siblings.remove(cpu)
     return siblings
 
-  def __init__(self):
-    self.cpus  = read_int_list(PREFIX + "cpu/online")
-    self.ht_siblings = {}
-    for cpu in self.cpus:
-      self.ht_siblings[cpu] = self.get_thread_sibling(cpu)
-    self.cpus_no_ht = filter_ht(self.cpus)
-
   def __str__(self):
     return "All cpus: {cpus}\n" \
-    "Without HT: {noht}\nHyper-Threading map: {htmap}"\
-    .format(cpus=self.cpus, noht=self.cpus_no_ht, htmap=self.ht_siblings.items())
+    "Without HT: {noht}\n" \
+    "Hyper-Threading map: {htmap}\n" \
+    "Ranked: {rank}\n" \
+    .format(cpus=self.all, noht=self.no_ht, htmap=self.ht_map.items(), rank=self.by_rank)
 topology = CPUTopology()
 
 
