@@ -37,6 +37,9 @@ class CPUTopology:
   cpus = []
   cpus_no_ht = []
   ht_siblings = {}
+  all = cpus
+  no_ht = cpus_no_ht
+  ht_map = ht_siblings
 
   def get_thread_sibling(self, cpu):
     siblings = read_int_list(PREFIX + "cpu/cpu%s/topology/thread_siblings_list" % cpu)
