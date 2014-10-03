@@ -70,6 +70,14 @@ def get_events():
     clean += [k]
   return clean
 
+def ipc(*args, **kwargs):
+  r = stat(events=['instructions', 'cycles'], *args, **kwargs)
+  instructions = r['instructions']
+  cycles = r['cycles']
+  if instructions == 0 or cycles == 0:
+    return None
+  return instructions / cycles
+
 
 def set_sndbuf(s, size):
   s.setsockopt(SOL_SOCKET, SO_SNDBUF, size)
@@ -79,7 +87,7 @@ def set_sndbuf(s, size):
 
 def stat(pid=None, events=[], time=0, perf="perf", guest=False, extra=""):
   # parse input
-  assert events and time
+  assert events and time, "please provide events and time"
   CMD = "{perf} kvm" if guest else "{perf}"
   CMD += " stat -e {events} --log-fd {fd} -x, {extra} sleep {time}"
   if pid: extra += " -p %s" % pid
@@ -95,7 +103,7 @@ def stat(pid=None, events=[], time=0, perf="perf", guest=False, extra=""):
   for s in result.splitlines():
     rawcnt,_,ev,*_ = s.split(',')
     if rawcnt == '<not counted>':
-      raise NotCountedError
+      raise NotCountedError("%s" % pid)
     r[ev] = int(rawcnt)
   return r
 

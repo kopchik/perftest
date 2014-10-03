@@ -70,7 +70,7 @@ def annotate(y:float, start:float, stop:float, text, notch:float=0.07, color='bl
   p.text((stop-start)/2, y+0.015 , text, horizontalalignment='center', fontsize=30)
 
 
-def myboxplot(data, *args, labels=None, **kwargs):
+def myboxplot(data, *args, labels=None, legend=["isolated env", "frozen env"], **kwargs):
   alpha=0.6
   positions = [n+y+1 for n,y in zip(range(len(data)),cycle([+0.2,-0.2]))]
   box = p.boxplot(data, *args, positions=positions, patch_artist=True, **kwargs)
@@ -85,7 +85,7 @@ def myboxplot(data, *args, labels=None, **kwargs):
 
   iso = p.Rectangle((0, 0), 1, 1, fc='green', ec='black', alpha=alpha)
   fro = p.Rectangle((0, 0), 1, 1, color='blue', ec='black', alpha=alpha)
-  p.legend([iso, fro], ["isolated env", "frozen env"])
+  p.legend([iso, fro], legend)
 
 
   return box
@@ -94,6 +94,24 @@ def analyze_reverse2(data):
   data = pickle.load(open(data, 'rb')).result
   isolated = data.isolated
   shared = data.shared
+  plots, labels = [], []
+  tuples = []
+  for test, isolated, shared in dictzip(isolated, shared):
+     prec = precision2(shared, isolated)
+     tuples.append((test, isolated, shared, prec))
+  tuples = sorted(tuples, key=lambda x: x[3])
+  for test, isolated, shared, prec in tuples:
+      # if prec >0.1: continue
+      plots.append(isolated)
+      plots.append(shared)
+      labels.append("{} {:.1%}".format(test, prec))
+  myboxplot(plots, labels=labels)
+
+
+def subsampling(data):
+  data = pickle.load(open(data, 'rb')).result
+  isolated = data.standard
+  shared = data.withskip
   plots, labels = [], []
   tuples = []
   for test, isolated, shared in dictzip(isolated, shared):
@@ -154,6 +172,30 @@ def analyze_reverse(ref, exp, prec:float=0.95, maxtries:int=50, mode='hist', con
   else:
     sys.exit(s("unknown mode ${mode}"))
 
+
+def compare(data1, data2, legend):
+  assert data1, "data1 cannot be empty"
+  assert data2, "data2 cannot be empty"
+  def ipc(data): return [t[0]/t[1] for t in data]
+
+  data, labels = [], []
+  for test, p, s in sorted(dictzip(data1,data2)):
+    print(test, p[:2], s[:2])
+    labels.append(test)
+    data.append(p)
+    data.append(ipc(s))
+    myboxplot(data, labels=labels, legend=legend, notch=True)
+
+def cmp(path1, path2):
+  pure   = pickle.load(open(path1, 'rb')).result.pure
+  shared = pickle.load(open(path2, 'rb')).result
+  return compare(pure, shared, legend=["isolated meas.", "shared meas."])
+
+def delay(path):
+  struct = pickle.load(open(path, 'rb'))
+  without   = struct.result.without
+  withdelay = struct.result.withdelay
+  return compare(without, withdelay, legend=["without delay", "with delay"])
 
 def distribution(data, mode='hist'):
   data = pickle.load(open(data, 'rb'))
@@ -243,6 +285,19 @@ def analyze(real, samples, skip=0, thr=0.9):
   #print(mean(avgms), mean(avgdevs))
   #print("RESULT for thr=%s:" % thr, result)
 
+
+def ragged(path, label=None, lw=4, color=None):
+  lw = float(lw)
+  with open(path) as csvfile:
+    ts, cycles = [], []
+    for t, c, _, typ in CSVReader(csvfile, type=(float,int,str,str)):
+        cycles.append(c)
+        ts.append(t)
+        assert typ == 'cycles'
+  print(ts[:10], cycles[:10])
+  args = {}
+  if color: args['color'] = color
+  p.plot(ts, cycles, label=label, lw=lw, **args)
 
 if __name__ == '__main__':
   parser = ArgumentParser()
