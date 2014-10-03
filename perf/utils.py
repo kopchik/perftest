@@ -31,7 +31,7 @@ def wait_idleness(maxbusy=3, t=3):
     print("%.1f"%busy, end=' ')
     sys.stdout.flush()
     time.sleep(1)
-  print()
+  print("it's idle enough")
 
 
 @type_check
