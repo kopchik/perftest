@@ -7,7 +7,7 @@ from .utils import memoized
 
 from collections import OrderedDict
 from subprocess import check_call
-from socket import socketpair
+from socket import socketpair, SOL_SOCKET, SO_SNDBUF
 from signal import SIGTERM
 from pprint import pprint
 from subprocess import *
@@ -71,6 +71,12 @@ def get_events():
   return clean
 
 
+def set_sndbuf(s, size):
+  s.setsockopt(SOL_SOCKET, SO_SNDBUF, size)
+  newsize = s.getsockopt(SOL_SOCKET, SO_SNDBUF)
+  assert newsize >= size
+
+
 def stat(pid=None, events=[], time=0, perf="perf", guest=False, extra=""):
   # parse input
   assert events and time
@@ -79,6 +85,7 @@ def stat(pid=None, events=[], time=0, perf="perf", guest=False, extra=""):
   if pid: extra += " -p %s" % pid
   # prepare cmd and call it
   read, write = socketpair()
+  #set_sndbuf(write, 1000000)
   cmd = CMD.format(perf=perf, pid=pid, events=",".join(events), \
                    fd=write.fileno(), time=time, extra=extra)
   check_call(shlex.split(cmd), pass_fds=[write.fileno()])  # TODO: buf overflow??
