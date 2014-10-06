@@ -85,12 +85,14 @@ def set_sndbuf(s, size):
   assert newsize >= size
 
 
-def stat(pid=None, events=[], time=0, perf="perf", guest=False, extra=""):
+def stat(pid=None, events=[], time=0, perf="perf", guest=False, systemwide=False, extra=""):
   # parse input
   assert events and time, "please provide events and time"
+  assert not (pid and systemwide), "either measure a pid or do it systemwide, not both"
   CMD = "{perf} kvm" if guest else "{perf}"
   CMD += " stat -e {events} --log-fd {fd} -x, {extra} sleep {time}"
   if pid: extra += " -p %s" % pid
+  if systemwide: extra += " -a"
   # prepare cmd and call it
   read, write = socketpair()
   #set_sndbuf(write, 1000000)

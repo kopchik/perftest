@@ -20,6 +20,7 @@ def get_cpu_name():
   assert len(cpus) == 1, "Omg, different CPUs installed in this machine??"
   return cpus.pop()
 
+
 def filter_ht(cpus: list):
   virtuals = set()
   for cpu in cpus:
