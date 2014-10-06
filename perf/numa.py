@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
+from useful.log import Log
 from .utils import read_val, read_int, str2list
 from .utils import run
 import os
+
+log = Log(['perf','numa'])
 
 PREFIX = "/sys/devices/system/"
 
@@ -32,6 +35,46 @@ def filter_ht(cpus: list):
   return list( filter(lambda c: c not in virtuals, cpus) )
 
 
+def cpus2mask(cpus):
+  mask = 0x0
+  for cpu in cpus:
+    mask |= 1 << cpu
+  return mask
+
+
+def mask2cpus(mask):
+  cpus = []
+  i = 0
+  while mask:
+    if mask & 1:
+      cpus.append(i)
+    i += 1
+    mask = mask >> 1
+  return cpus
+
+
+def get_cur_cpu(pid):
+  cmd = "ps h -p %s -o psr" % pid
+  rawcpu = run(cmd)
+  return int(rawcpu)
+
+
+def pin_task(pid, cpu):
+  mask = cpus2mask([cpu])
+  return set_affinity(pid, mask)
+
+def get_affinity(pid):
+  cmd = "schedtool %s" % pid
+  raw = run(cmd)
+  rawmask = raw.rsplit(b'AFFINITY')[1]
+  return int(rawmask, base=16)
+
+
+def set_affinity(pid, mask):
+  cmd = "taskset -ap %s %s" % (hex(mask), pid)
+  run(cmd, sudo='root')
+
+
 # TODO: assert only one-node is supported
 class CPUTopology:
   """ Get NUMA topology. Only online CPUs are counted. """
@@ -60,4 +103,4 @@ topology = CPUTopology()
 
 
 if __name__ == '__main__':
-  print(topology)
+  log.info(topology)
