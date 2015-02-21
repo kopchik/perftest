@@ -40,7 +40,7 @@ class Template(KVM):
       if vm == self: continue
       vm.freeze()
 
-  def ipcstat(self, time=1):
+  def ipcstat(self, time=1, raw=False):
     try:
       r = kvmstat(self.pid, ['instructions', 'cycles'], time)
       ins = r['instructions']
@@ -49,7 +49,7 @@ class Template(KVM):
       raise NotCountedError(err)
     if ins == 0 or cycles == 0:
       raise NotCountedError
-    return ins/cycles
+    return r if raw else ins/cycles
 
 
 
