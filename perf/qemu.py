@@ -7,7 +7,6 @@ from .perftool import kvmstat, NotCountedError
 from .utils import retry
 from subprocess import check_call
 from ipaddress import ip_address
-import rpyc
 
 
 class Template(KVM):
@@ -25,6 +24,7 @@ class Template(KVM):
   bname  = None  # benchmark name
 
   def Popen(self, *args, **kwargs):
+    import rpyc  # lazy load of rarely needed module
     if not self.rpc:
       self.rpc = retry(rpyc.connect, args=(str(self.addr),), \
                         kwargs={"port":6666}, retries=10)
