@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 from useful.log import Log
-from .utils import read_val, read_int, str2list
+from .utils import read_val, str2list
 from .utils import run
-import os
 
-log = Log(['perf','numa'])
-
+log = Log(['perf', 'numa'])
 PREFIX = "/sys/devices/system/"
 
 
@@ -29,10 +27,10 @@ def filter_ht(cpus: list):
   for cpu in cpus:
     siblings = read_int_list(PREFIX + "cpu/cpu%s/topology/thread_siblings_list" % cpu)
     assert len(siblings) == 1 or len(siblings) == 2, \
-      "Hmm... Hyper-Threading with more than two siblings??"
+        "Hmm... Hyper-Threading with more than two siblings??"
     if len(siblings) == 2:
       virtuals.add(siblings[1])
-  return list( filter(lambda c: c not in virtuals, cpus) )
+  return list(filter(lambda c: c not in virtuals, cpus))
 
 
 def cpus2mask(cpus):
@@ -63,6 +61,7 @@ def pin_task(pid, cpu):
   mask = cpus2mask([cpu])
   return set_affinity(pid, mask)
 
+
 def get_affinity(pid):
   cmd = "schedtool %s" % pid
   raw = run(cmd)
@@ -80,7 +79,7 @@ class CPUTopology:
   """ Get NUMA topology. Only online CPUs are counted. """
 
   def __init__(self):
-    self.all  = read_int_list(PREFIX + "cpu/online")
+    self.all = read_int_list(PREFIX + "cpu/online")
     self.ht_map = {}
     for cpu in self.all:
       self.ht_map[cpu] = self.get_thread_sibling(cpu)
@@ -95,10 +94,13 @@ class CPUTopology:
 
   def __str__(self):
     return "All cpus: {cpus}\n" \
-    "Without HT: {noht}\n" \
-    "Hyper-Threading map: {htmap}\n" \
-    "Ranked: {rank}\n" \
-    .format(cpus=self.all, noht=self.no_ht, htmap=self.ht_map.items(), rank=self.by_rank)
+           "Without HT: {noht}\n" \
+           "Hyper-Threading map: {htmap}\n" \
+           "Ranked: {rank}\n" \
+           .format(cpus=self.all,
+                   noht=self.no_ht,
+                   htmap=self.ht_map.items(),
+                   rank=self.by_rank)
 topology = CPUTopology()
 
 
