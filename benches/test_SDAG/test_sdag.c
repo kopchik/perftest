@@ -113,12 +113,11 @@ int main(int argc, char* argv[]) {
     
 	/* read input parameters */	
 	
-    while (1) {
-	    read_input_parameters(argc,argv,trainfile, &testfiles, &ntestfiles ,&verbosity,
-                              &kernel_cache_size,&learn_parm, &kernel_parm);
-	//
-	    my_read_examples(trainfile, &X, &Y, &totdoc, kernel_parm);
-        dag_tree_kernel_vs_dag_size(X, Y, totdoc, SAMPLE_SIZE, kernel_parm);
-    }
-    return 0;
+  read_input_parameters(argc,argv,trainfile, &testfiles, &ntestfiles ,&verbosity,
+                        &kernel_cache_size,&learn_parm, &kernel_parm);
+  //
+  my_read_examples(trainfile, &X, &Y, &totdoc, kernel_parm);
+  dag_tree_kernel_vs_dag_size(X, Y, totdoc, SAMPLE_SIZE, kernel_parm);
+
+  execvp(argv[0], argv);
 }
