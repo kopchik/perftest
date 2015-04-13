@@ -41,7 +41,7 @@ def precision2(samples1, samples2):
   return 1 - abs(1-mean(samples1)/mean(samples2))
 
 
-def single(path, label=None, lw=4, color=None):
+def single(path, label=None, lw=4, ms=10, **kwargs):
   lw = float(lw)
   with open(path) as csvfile:
     ts, cycles = [], []
@@ -57,9 +57,9 @@ def single(path, label=None, lw=4, color=None):
       else:
         raise Exception("I accept only cycles and instructions")
   print(ts[:10], cycles[:10])
-  args = {}
-  if color: args['color'] = color
-  p.plot(ts, cycles, label=label, lw=lw, **args)
+  #args = {}
+  #if color: args['color'] = color
+  p.plot(ts, cycles, label=label, lw=lw, ms=ms, **kwargs)
 
 
 def annotate(y:float, start:float, stop:float, text, notch:float=0.07, color='black', lw:float=2):
@@ -117,7 +117,7 @@ def subsampling(data):
   for test, isolated, shared in dictzip(isolated, shared):
      prec = precision2(shared, isolated)
      tuples.append((test, isolated, shared, prec))
-  tuples = sorted(tuples, key=lambda x: x[3])
+  tuples = sorted(tuples, key=lambda x: x[0])
   for test, isolated, shared, prec in tuples:
       # if prec >0.1: continue
       plots.append(isolated)
