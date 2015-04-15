@@ -8,7 +8,7 @@ import shlex
 import rpyc
 import os
 
-from useful.small import partition2
+from useful.small import partition
 
 
 # XXX doesn't work at all
@@ -21,16 +21,15 @@ from useful.small import partition2
 
 
 class MyPopen(subprocess.Popen):
-  def __init__(self, cmd, *args, **kwargs):
+  def __init__(self, cmd, *args, env=None, **kwargs):
     # do not split into tokens if shell=True is specified
     # because shell will execute only the first element
     if isinstance(cmd, str) and not kwargs.get('shell', False):
       cmd = shlex.split(cmd)
-      env, cmd = partition2(cmd, key=lambda s: s.find('=') > 0)
-      env = dict(e.split('=') for e in env)
-      print("ENV:", env, "CMD:", cmd)
-      if not env:
-        env = None
+      #env, cmd = partition(cmd, key=lambda s: s.find('=') > 0)
+      #env = dict(e.split('=') for e in env)  # TODO: does this overwrite the original env completely?
+      #if not env:
+      #  env = None
     super().__init__(cmd, *args, env=env, **kwargs)
 
   def killall(self, sig=SIGKILL):

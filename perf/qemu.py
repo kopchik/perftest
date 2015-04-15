@@ -13,10 +13,6 @@ class Template(KVM):
   name   = "template"
   mem    = 1024
   rpc    = None  # to be filled where rpc.connect is called
-  net    = [Bridged(ifname="template", model='e1000',
-            mac="52:54:91:5E:38:BB", br="intbr")]
-  drives = [Drive("/home/sources/perfvms/template.qcow2",
-            cache="unsafe")]
   auto   = True
   rpc    = None
   Popen  = None
