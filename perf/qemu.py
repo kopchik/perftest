@@ -39,7 +39,8 @@ class Template(KVM):
         continue
       vm.freeze()
 
-  def ipcstat(self, t=1, raw=False):
+  def ipcstat(self, interval=100, raw=False):
+    t = interval / 1000
     try:
       r = kvmstat(self.pid, ['instructions', 'cycles'], t)
       ins = r['instructions']
