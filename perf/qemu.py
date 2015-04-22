@@ -5,6 +5,7 @@ from libvmc import KVM, Bridged, Drive, main, \
 assert vmc_version >= 12, "vmc library is too old"
 from .perftool import kvmstat, NotCountedError
 from .utils import retry
+from useful.small import readfd
 
 
 class Template(KVM):
@@ -16,6 +17,8 @@ class Template(KVM):
   rpc    = None
   Popen  = None
   bname  = None  # benchmark name
+  last_pid = None
+  sched_fd = None
 
   def Popen(self, *args, **kwargs):
     import rpyc  # lazy load of rarely needed module
@@ -36,7 +39,8 @@ class Template(KVM):
         continue
       vm.freeze()
 
-  def ipcstat(self, t=1, raw=False):
+  def ipcstat(self, interval=100, raw=False):
+    t = interval / 1000
     try:
       r = kvmstat(self.pid, ['instructions', 'cycles'], t)
       ins = r['instructions']
@@ -46,6 +50,16 @@ class Template(KVM):
     if ins == 0 or cycles == 0:
       raise NotCountedError
     return r if raw else ins/cycles
+
+  def get_cpu(self):
+    if not self.last_pid:
+      self.last_pid = self.pid
+    if not self.sched_fd:
+      self.sched_fd = open('/proc/%s/schedstat'%self.last_pid, 'rt')
+
+    cpu, *_ = readfd(self.sched_fd, conv=int)
+    return cpu
+
 
 
 if __name__ == '__main__':
