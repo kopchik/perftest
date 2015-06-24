@@ -1,4 +1,4 @@
-VERSION = (2, 9)
+VERSION = (2, 10)
 def min_version(v):
   assert v <= VERSION, "expected: %s, current: %s" % (v, VERSION)
 

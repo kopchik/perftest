@@ -51,6 +51,13 @@ class Template(KVM):
       raise NotCountedError
     return r if raw else ins/cycles
 
+  def stat(self, events, interval):
+    t = interval / 1000
+    try:
+      return kvmstat(self.pid, events, t)
+    except Exception as err:
+      raise NotCountedError(err)
+
   def get_cpu(self):
     if not self.last_pid:
       self.last_pid = self.pid
