@@ -56,6 +56,15 @@ def get_cur_cpu(pid):
   rawcpu = run(cmd)
   return int(rawcpu)
 
+def get_cpu_r(pid):
+  assert isinstance(pid, int), "pid should be int"
+  cmd = "ps -L h -p %s -o lwp,psr" % pid
+  raw = run(cmd)
+  ret = []
+  for line in raw.splitlines():
+    tid, cpu = line.split()
+    ret.append((int(tid), int(cpu)))
+  return ret
 
 def pin_task(pid, cpu):
   mask = cpus2mask([cpu])
